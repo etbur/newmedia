@@ -7,5 +7,6 @@ websocket_urlpatterns = [
     path('ws/products/fetch/', ProductListConsumer.as_asgi()),
     path('ws/products/update/', ProductUpdateConsumer.as_asgi()),
     path('ws/products/delete/', ProductDeleteConsumer.as_asgi()),
-    path('ws/categories/', ProductCategory.as_asgi()),
+    path('ws/products/categories/', ProductCategory.as_asgi()),
+    # path('ws/products/', ProductwithCategory.as_asgi()),
 ]

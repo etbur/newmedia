@@ -83,7 +83,6 @@ class ProductCreateConsumer(AsyncWebsocketConsumer):
 class ProductCategory(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()
-
     async def disconnect(self, close_code):
         pass
 
@@ -116,8 +115,6 @@ class ProductCategory(AsyncWebsocketConsumer):
                 'action': 'fetch_categories_error',
                 'error': str(e)
             }))
-
-
 
 
 class ProductListConsumer(WebsocketConsumer):
