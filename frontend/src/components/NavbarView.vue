@@ -6,18 +6,18 @@ const showSidebar = ref(false);
 </script>
 
 <template>
-  <header class="flex flex-col fixed top-0 w-full z-10 mb-10 sm:mb-0">
-    <div class="flex flex-col gap-4 py-6 bg-[#008A8A]">
+  <header class="sm:flex flex-col fixed top-0 w-full z-10 mb-10 sm:mb-0">
+    <div class="flex flex-col bg-[#008A8A]">
       <div
         class="flex justify-between px-[6vw] md:py-0 items-center bg-[#008A8A]"
       >
         <img
           src="../assets/logo.jpg"
-          class="w-[8vw] h-[8vw] sm:w-[6vw] sm:h-[6vw]"
+          class="w-[6vw] h-[6vw] sm:w-[3vw] sm:h-[3vw]"
           alt="Logo"
         />
         <p
-          class="text-white text-sm sm:text-xl md:text-2xl xl:text-3xl hidden sm:block"
+          class="text-white text-sm sm:text-lg md:text-xl  hidden sm:block"
         >
           Connect, Share and Engage with friends
         </p>
@@ -32,7 +32,7 @@ const showSidebar = ref(false);
           </div>
 
           <Icon
-            class="w-[6vw] h-[6vw] sm:w-[4vw] sm:h-[4vw]"
+            class="w-[5vw] h-[5vw] sm:w-[3vw] sm:h-[3vw]"
             icon="mdi:account"
           />
         </div>
@@ -44,7 +44,7 @@ const showSidebar = ref(false);
 
     <!-- Main Navigation -->
     <nav
-      class="flex flex-col gap-5 sm:flex-row sm:gap-10 p-4 bg-[#F1F1F1] justify-between items-center px-[7vw] shadow-md"
+      class="flex flex-col gap-5 sm:flex-row sm:gap-10 p-3 md:py-2 bg-[#F1F1F1] justify-between items-center px-[7vw] shadow-md"
     >
       <div class="flex gap-6 sm:gap-11">
         <RouterLink to="/friends" >

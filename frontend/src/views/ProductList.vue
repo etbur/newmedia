@@ -92,13 +92,14 @@ const showCategory = (category) => {
  });
  </script>
  
- <template>
-   <div class="flex justify-end gap-6 mb-3 ">
+ <template >
+  <div class="mx-[2vw]">
+   <div class="flex justify-end gap-6 mb-3  ">
     <div class="relative inline-block text-left">
       <div>
         <button
           @click="toggleDropdown('sell')"
-          class="inline-flex justify-center w-full rounded-md border border-[#D9D9D9] text-[#008A8A] shadow-sm px-4 py-1 bg-white text-sm hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#D9D9D9]"
+          class="inline-flex justify-center w-full rounded-md border border-[#D9D9D9] text-[#008A8A] font-medium shadow-sm px-4 py-1 bg-white text-sm hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#D9D9D9]"
           type="button"
         >
           Sell
@@ -149,7 +150,7 @@ const showCategory = (category) => {
       <div>
         <button
           @click="toggleDropdown('filter')"
-          class="inline-flex justify-center w-full rounded-md border border-[#D9D9D9] text-[#008A8A] shadow-sm px-4 py-1 bg-white text-sm hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#008A8A]"
+          class="inline-flex justify-center w-full rounded-md border border-[#D9D9D9] text-[#008A8A]  font-medium shadow-sm px-4 py-1 bg-white text-sm hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#008A8A]"
           type="button"
         >
           Filter
@@ -208,7 +209,7 @@ const showCategory = (category) => {
       <div>
         <button
           @click="toggleDropdown('category')"
-          class="inline-flex justify-center w-full rounded-md border border-[#D9D9D9] text-[#008A8A] shadow-sm px-4 py-1 bg-white text-sm outline-none hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#008A8A]"
+          class="inline-flex justify-center w-full rounded-md border border-[#D9D9D9] text-[#008A8A] font-medium shadow-sm px-4 py-1 bg-white text-sm outline-none hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#008A8A]"
           type="button"
         >
           Category
@@ -282,7 +283,7 @@ const showCategory = (category) => {
      </div>
  
      <div class="flex flex-col gap-4">
-       <h3 class="font-bold capitalize">{{ product.name }}</h3>
+       <h3 class="font-medium text-xl capitalize">{{ product.name }}</h3>
        <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-[25vw] h-[16vw] rounded-lg" />
        <div class="flex justify-between items-center">
          <p class="text-gray-900">{{ product.price }} Br</p>
@@ -299,6 +300,7 @@ const showCategory = (category) => {
      </div>
    </div>
  </div>
+</div>
 
  </template>
  
