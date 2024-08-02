@@ -134,8 +134,8 @@
   </script>
   
   <template>
-    <div class="mx-[2vw]">
-      <div class="flex justify-end gap-6 mb-3">
+    <div class=" md:mx-[2vw]">
+      <div class="flex flex-wrap ml-[8vw] md:mx-0 md:justify-end gap-6 mb-3">
         <!-- Dropdowns for actions -->
         <div class="relative inline-block text-left">
           <div>
@@ -297,7 +297,7 @@
   
       <!-- Display Product List -->
     
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:ml-0 lg:grid-cols-3 mx:ml-[10%] sm:ml-[5%]  gap-[5%]  mt-16  items-center">
+    <div class="grid  items-center mx-[8vw]  sm:mx-0 sm:grid-cols-2 lg:ml-0 lg:grid-cols-3 mx:ml-[10%] sm:ml-[5%]  gap-[5%]  mt-16  ">
    <div v-for="product in products" :key="product.id" class="  bg-[#F4F4F4] flex flex-col gap-3 rounded-md shadow-md p-8">
      <div class="flex flex-col gap-2">
        <div class="flex items-center gap-4">
