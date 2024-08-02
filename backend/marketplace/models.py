@@ -20,5 +20,5 @@ class Products(models.Model):
     seller_profile_name = models.CharField(max_length=255)
     seller_profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='other')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    # created_at = models.DateTimeField(auto_now_add=True)
+    # updated_at = models.DateTimeField(auto_now=True)
