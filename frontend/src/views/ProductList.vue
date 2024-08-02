@@ -283,7 +283,7 @@ const showCategory = (category) => {
  
      <div class="flex flex-col gap-4">
        <h3 class="font-bold">{{ product.name }}</h3>
-       <img :src="product.image" alt="Product Image" class="w-full h-auto rounded-lg" />
+       <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-full h-auto rounded-lg" />
        <div class="flex justify-between items-center">
          <p class="text-gray-900">{{ product.price }} Br</p>
          <div class="flex gap-3 items-center justify-end">
