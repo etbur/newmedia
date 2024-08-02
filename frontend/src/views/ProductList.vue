@@ -277,20 +277,20 @@ const showCategory = (category) => {
      <div class="flex flex-col gap-2">
        <div class="flex items-center gap-4">
          <img :src="avatar" alt="seller profile" class="w-6 h-6" />
-         <p class="text-sm font-medium capitalize text-[#]">{{ product.seller_profile_name }}</p>
+         <p class="text-sm capitalize text-[#]">{{ product.seller_profile_name }}</p>
        </div>
-       <p class="text-sm">{{ product.seller_profile_date }}</p>
+       <p class="text-sm">{{ product.created_at }}</p>
      </div>
  
      <div class="flex flex-col gap-4">
-       <h3 class="font-medium text-xl capitalize">{{ product.name }}</h3>
+       <h3 class="font-medium  capitalize">{{ product.name }}</h3>
        <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-[25vw] h-[16vw] rounded-lg" />
        <div class="flex justify-between items-center">
          <p class="text-gray-900">{{ product.price }} Br</p>
          <div class="flex gap-3 items-center justify-end">
-           <p class="text-gray-600">Rating: {{ product.rating || 0}}</p>
+           <p class="text-gray-600">Rating: {{ product.rating }}</p>
            <p class="text-[#00b4b4] flex gap-2">
-             {{ product.num_views }}<span>Views</span>
+             {{ product.views }}<span>Views</span>
            </p>
            <router-link class="text-[#00b4b4] px-4 py-2 rounded-md" @click="updateViewCount">
              Detail
@@ -301,6 +301,5 @@ const showCategory = (category) => {
    </div>
  </div>
 </div>
-
  </template>
  

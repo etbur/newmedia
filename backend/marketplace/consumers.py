@@ -80,7 +80,6 @@ class ProductCreateConsumer(AsyncWebsocketConsumer):
                 'error': str(e)
             }))
 
-
 class ProductCategory(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()

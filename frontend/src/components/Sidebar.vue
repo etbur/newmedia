@@ -8,7 +8,7 @@ const route = useRoute();
 
 <template>
   <section
-    class="flex flex-col gap-3 h-[500px] overflow-y-scroll pt-[1%] sm:pb-[16%] pr-3"
+    class="flex flex-col gap-3 h-[500px] overflow-y-scroll pt-[1%] sm:pb-[16%] pr-6"
   >
     <router-link
       to="/newpost"
@@ -18,7 +18,6 @@ const route = useRoute();
       <Icon icon="mdi:post-outline" class="inline-block mr-2" />
       <span class="text-blue-800 hover:text-[#C59728]">New Post</span>
     </router-link>
-
     <router-link
       to="/design"
       active-class="bg-[#E2E2E2] pl-2 text-[#C59728]"
