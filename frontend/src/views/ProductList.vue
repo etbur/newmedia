@@ -271,23 +271,23 @@ const showCategory = (category) => {
       </div>
     </div>
   </div>
- <div class="grid grid-cols-3 gap-[5%]  mt-16 ">
+ <div class="grid grid-cols-1 sm:grid-cols-2 lg:ml-0 lg:grid-cols-3 mx:ml-[10%] sm:ml-[5%]  gap-[5%]  mt-16  items-center">
    <div v-for="product in products" :key="product.id" class="  bg-[#F4F4F4] flex flex-col gap-3 rounded-md shadow-md p-8">
      <div class="flex flex-col gap-2">
        <div class="flex items-center gap-4">
          <img :src="avatar" alt="seller profile" class="w-6 h-6" />
-         <p class="text-sm font-medium">{{ product.seller_profile_name }}</p>
+         <p class="text-sm font-medium capitalize text-[#]">{{ product.seller_profile_name }}</p>
        </div>
        <p class="text-sm">{{ product.seller_profile_date }}</p>
      </div>
  
      <div class="flex flex-col gap-4">
-       <h3 class="font-bold">{{ product.name }}</h3>
+       <h3 class="font-bold capitalize">{{ product.name }}</h3>
        <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-[25vw] h-[16vw] rounded-lg" />
        <div class="flex justify-between items-center">
          <p class="text-gray-900">{{ product.price }} Br</p>
          <div class="flex gap-3 items-center justify-end">
-           <p class="text-gray-600">Rating: {{ product.rating || "N/A" }}</p>
+           <p class="text-gray-600">Rating: {{ product.rating || 0}}</p>
            <p class="text-[#00b4b4] flex gap-2">
              {{ product.num_views }}<span>Views</span>
            </p>
