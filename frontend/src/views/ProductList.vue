@@ -271,8 +271,8 @@ const showCategory = (category) => {
       </div>
     </div>
   </div>
- 
-   <div v-for="product in products" :key="product.id" class="w-1/4 p-8 bg-[#F4F4F4] flex flex-col gap-3 rounded-md shadow-md">
+ <div class="grid grid-cols-3 gap-[5%]  mt-16 ">
+   <div v-for="product in products" :key="product.id" class="  bg-[#F4F4F4] flex flex-col gap-3 rounded-md shadow-md p-8">
      <div class="flex flex-col gap-2">
        <div class="flex items-center gap-4">
          <img :src="avatar" alt="seller profile" class="w-6 h-6" />
@@ -283,7 +283,7 @@ const showCategory = (category) => {
  
      <div class="flex flex-col gap-4">
        <h3 class="font-bold">{{ product.name }}</h3>
-       <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-full h-auto rounded-lg" />
+       <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-[25vw] h-[16vw] rounded-lg" />
        <div class="flex justify-between items-center">
          <p class="text-gray-900">{{ product.price }} Br</p>
          <div class="flex gap-3 items-center justify-end">
@@ -298,5 +298,7 @@ const showCategory = (category) => {
        </div>
      </div>
    </div>
+ </div>
+
  </template>
  
