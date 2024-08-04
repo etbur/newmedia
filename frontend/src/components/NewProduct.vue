@@ -4,7 +4,8 @@ import { reactive, onMounted, onBeforeUnmount, ref } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 
-const store = useStore();
+// const store = useStore();
+import store from '@/store';
 const router = useRouter();
 
 const productData = reactive({
@@ -32,7 +33,7 @@ onMounted(() => {
     const data = JSON.parse(event.data);
     console.log('Product WebSocket message:', data);
     if (data.action === 'create_product_success') {
-      router.push('/marketplace');
+      router.push('/app/marketplace');
     } else if (data.action === 'create_product_error') {
       console.error('Error creating product:', data.error);
     }

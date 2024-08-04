@@ -7,6 +7,25 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+# class Post(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+#     title = models.CharField(max_length=100, blank=True, null=True)
+#     description = models.TextField()
+#     media = models.FileField(upload_to='uploads/', blank=True, null=True)
+#     tags = models.ManyToManyField(Tag, related_name='posts', blank=True)
+#     location = models.CharField(max_length=100, blank=True, null=True)
+#     audience = models.CharField(max_length=20, choices=[
+#         ('public', 'Public'),
+#         ('friends', 'Friends'),
+#         ('group', 'Group'),
+#     ], default='public')
+#     count_like = models.PositiveIntegerField(default=0)
+#     count_comment = models.PositiveIntegerField(default=0)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     def __str__(self):
+#         return self.title or "Untitled Post"
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     title = models.CharField(max_length=100, blank=True, null=True)
@@ -23,6 +42,8 @@ class Post(models.Model):
     count_comment = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    username = models.CharField(max_length=150, blank=True, null=True)  # Add username field
+    profile_picture = models.URLField(blank=True, null=True)  # Add profile picture URL field
 
     def __str__(self):
         return self.title or "Untitled Post"

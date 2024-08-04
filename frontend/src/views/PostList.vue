@@ -357,7 +357,7 @@ onUnmounted(() => {
               >
                 <div class="flex gap-4 items-center">
                   <img
-                    :src="post.user.profile_picture || avatar"
+                    :src="post.profile_picture || avatar"
                     class="w-10 h-10 rounded-full"
                     alt="User profile picture"
                   />
@@ -418,7 +418,7 @@ onUnmounted(() => {
               "
               :src="`http://localhost:8000${post.media}`"
               alt="post img"
-              class="rounded-lg  object-cover"
+              class="rounded-lg  object-cover w-full h-[45vh] "
               
             />
             <video

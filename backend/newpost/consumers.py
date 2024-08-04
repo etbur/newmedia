@@ -10,29 +10,34 @@ from django.core.files.base import ContentFile
 from django.contrib.auth.models import User
 from chat_app.models import  Profile
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
+
 
 logger = logging.getLogger(__name__)
-class PostConsumer(AsyncWebsocketConsumer):
+
+class PostCreateConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.group_name = 'posts'
         
         # Get the user from the scope
-        self.user = self.scope.get('user')
-        
+        self.user = self.scope.get('user')        
         if self.user.is_authenticated:
             await self.channel_layer.group_add(
                 self.group_name,
                 self.channel_name
             )
             await self.accept()
+            logger.info(f"User {self.user.username} connected to the WebSocket.")
         else:
             await self.close()
+            logger.warning("Unauthorized user attempted to connect.")
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             self.group_name,
             self.channel_name
         )
+        logger.info(f"User {self.user.username} disconnected from the WebSocket.")
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -42,17 +47,20 @@ class PostConsumer(AsyncWebsocketConsumer):
             if action == 'create':
                 post_data = data.get('post')
                 post = await self.create_post(post_data, self.user)
+                serialized_post = await self.serialize_post(post)
                 await self.channel_layer.group_send(
                     self.group_name,
                     {
                         'type': 'post_created',
-                        'post': await self.serialize_post(post)
+                        'post': serialized_post
                     }
                 )
+                logger.info(f"Post created by user: {self.user.username}")
             else:
                 await self.send(text_data=json.dumps({'error': 'Invalid action'}))
+                logger.warning(f"Invalid action received: {action}")
         except Exception as e:
-            logger.error(f"Error processing request: {e}")
+            logger.error(f"Error processing request from user {self.user.username}: {e}")
             await self.send(text_data=json.dumps({
                 'error': f'An error occurred while processing the request: {str(e)}'
             }))
@@ -70,27 +78,31 @@ class PostConsumer(AsyncWebsocketConsumer):
         else:
             media_file = None
 
-        # Create the post with the authenticated user
-        post = Post.objects.create(user=user, **post_data)
+        with transaction.atomic():
+            # Create the post with the authenticated user
+            post = Post.objects.create(user=user, **post_data)
 
-        if media_file:
-            post.media.save(media_file.name, media_file)
+            if media_file:
+                post.media.save(media_file.name, media_file)
 
-        tag_objects = []
-        for tag_name in tags:
-            tag, created = Tag.objects.get_or_create(name=tag_name)
-            tag_objects.append(tag)
+            tag_objects = []
+            for tag_name in tags:
+                tag, created = Tag.objects.get_or_create(name=tag_name)
+                tag_objects.append(tag)
 
-        post.tags.set(tag_objects)
-        post.save()
+            post.tags.set(tag_objects)
+            post.save()
 
         return post
 
     @database_sync_to_async
     def serialize_post(self, post):
         # Get user profile
-        user_profile = Profile.objects.filter(user=post.user).first()
-        profile_picture_url = user_profile.profile_picture.url if user_profile and user_profile.profile_picture else None
+        try:
+            user_profile = Profile.objects.get(user=post.user)
+            profile_picture_url = user_profile.profile_picture.url if user_profile.profile_picture else None
+        except Profile.DoesNotExist:
+            profile_picture_url = None
         
         return {
             'id': post.pk,

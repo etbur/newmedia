@@ -26,7 +26,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['title', 'description', 'media', 'tags', 'location', 'audience', 'created_at', 'updated_at']
+        fields = ['title', 'description', 'media', 'tags', 'location', 'audience', 'created_at', 'updated_at','username','profile_picture']
     def get_media_url(self, obj):
         if obj.media:
             return obj.media.url

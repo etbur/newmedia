@@ -103,11 +103,14 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, onBeforeUnmount } from "vue";
+import { reactive, ref, onMounted, onBeforeUnmount, computed } from "vue";
 import { useRouter } from "vue-router";
+import { useStore } from "vuex"; // Import useStore to access Vuex store
 import { Form, Field, ErrorMessage } from "vee-validate";
 import * as Yup from "yup";
+import store from "@/store";
 
+// const store = useStore();
 const router = useRouter();
 
 const previewUrl = ref(null);
@@ -122,23 +125,8 @@ const formInput = reactive({
 
 let websocket;
 
-// const connectWebSocket = () => {
-//   websocket = new WebSocket("ws://localhost:8000/ws/posts/");
-//   websocket.onopen = () => {
-//     console.log("WebSocket connection established");
-//   };
-//   websocket.onmessage = (message) => {
-//     console.log("Message from server:", message.data);
-//   };
-//   websocket.onerror = (error) => {
-//     console.error("WebSocket error:", error);
-//   };
-//   websocket.onclose = () => {
-//     console.log("WebSocket connection closed");
-//   };
-// };
 const connectWebSocket = () => {
-  websocket = new WebSocket("ws://localhost:8000/ws/posts/");
+  websocket = new WebSocket("ws://localhost:8000/ws/posts/create");
   websocket.onopen = () => {
     console.log("WebSocket connection established");
   };
@@ -163,6 +151,10 @@ const validationSchema = Yup.object({
 });
 
 const onSubmit = async (values) => {
+  
+  // Get active user information from Vuex store
+  const activeUser = store.state.activeUser;
+
   const data = {
     action: "create",
     post: {
@@ -172,6 +164,8 @@ const onSubmit = async (values) => {
       media: formInput.media,
       location: values.location,
       audience: values.audience,
+      username: activeUser ? activeUser.username : "", 
+      profilePicture: activeUser ? activeUser.profilePicture : "" 
     },
   };
 
@@ -214,3 +208,4 @@ onBeforeUnmount(() => {
   }
 });
 </script>
+
