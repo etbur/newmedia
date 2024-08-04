@@ -47,7 +47,7 @@ onMounted(() => {
   };
 
   // Create WebSocket connection for fetching categories
-  categorySocket = new WebSocket(`ws://localhost:8000/ws/categories/`);
+  categorySocket = new WebSocket(`ws://localhost:8000/ws/products/categories/`);
 
   categorySocket.onopen = () => {
     console.log('Category WebSocket connection opened');

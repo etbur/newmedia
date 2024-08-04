@@ -11,7 +11,7 @@ const route = useRoute();
     class="flex flex-col gap-3 h-[500px] overflow-y-scroll pt-[1%] sm:pb-[16%] pr-6"
   >
     <router-link
-      to="/newpost"
+      to="/app/newpost"
       active-class="bg-[#E2E2E2] text-[#C59728]"
       exact-active-class="bg-[#E2E2E2] pl-2 text-[#C59728] py-1"
     >
@@ -46,7 +46,7 @@ const route = useRoute();
     </router-link>
 
     <router-link
-      to="/marketplace"
+      to="/app/marketplace"
       active-class="bg-[#E2E2E2] pl-2 text-[#C59728]"
       exact-active-class="py-1 bg-[#E2E2E2] pl-2 text-[#C59728]"
     >

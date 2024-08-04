@@ -1,4 +1,4 @@
-<!-- <template>
+<template>
   <form @submit.prevent="login">
     <div class="form-head">
       <a href="index.html" class="logo"><img
@@ -6,8 +6,6 @@
           alt="logo"></a>
     </div>
     <h4 class="text-primary my-4">Log in !</h4>
-
-
     <div class="form-floating mb-3">
       <input type="text" v-model="user.username" class="form-control" id="floatingInput" placeholder="name@example.com">
       <label for="floatingInput">Username</label>
@@ -33,38 +31,39 @@
   </p>
 
 </template>
-<script setup>
-import { ref } from 'vue';
+
+<script>
 import axios from "../../axios";
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
 
-    const store = useStore();
-    const router = useRouter();
-    
-    const user = ref({
-      username: '',
-      password: ''
-    });
-
-    const login = async () => {
-      try {
-        const response = await axios.post('login/', user.value);
-        store.commit('SET_TOKEN', response.data.token);
-        store.commit('UPDATE_USER', response.data.user);
-        router.replace({ path: '/postlist' }); //app
-      } catch (error) {
-        console.log(error);
+export default {
+  name: "Login",
+  data() {
+    return {
+      user: {
+        username: '',
+        password: ''
       }
-    };
+    }
+  },
+  methods: {
+    async login() {
+      await axios.post('login/', this.user).then(response => {
+        this.$store.commit('SET_TOKEN', response.data.token)
+        this.$store.commit('UPDATE_USER', response.data.user)
+        this.$router.replace({path: '/app/postlist'}) //app
+      }).catch(error => {
+        console.log(error)
+      })
 
-    
-  
+    }
+  }
+}
 </script>
+
 <style scoped>
 
-</style> -->
-<template>
+</style>
+<!-- <template>
   <form @submit.prevent="login">
     <div class="form-head">
       <a href="index.html" class="logo">
@@ -150,4 +149,4 @@ export default {
 
 <style scoped>
 /* Add your styles here */
-</style>
+</style> -->

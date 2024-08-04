@@ -47,39 +47,39 @@ const showSidebar = ref(false);
       class="flex flex-col gap-5 sm:flex-row sm:gap-10 p-3 md:py-2 bg-[#F1F1F1] justify-between items-center px-[7vw] shadow-md"
     >
       <div class="flex gap-6 sm:gap-11">
-        <RouterLink to="/friends" >
+        <RouterLink to="/app/friends" >
           <Icon
             class="w-4 h-4 sm:w-6 sm:h-6 transition-transform duration-300 ease-in-out transform hover:scale-125 hover:rotate-12 hover:text-[#C59728] router-link-active:scale-125 router-link-active:rotate-12 router-link-active:text-[#008a8a]"
             icon="mdi:account-plus"
           />
         </RouterLink>
-        <RouterLink to="/group">
+        <RouterLink to="/app/group">
           <Icon
             class="w-4 h-4 sm:w-6 sm:h-6 transition-transform duration-300 ease-in-out transform hover:scale-125 hover:rotate-12 hover:text-[#C59728] router-link-active:scale-125 router-link-active:rotate-12 router-link-active:text-[#008a8a]"
             icon="mdi:account-group"
           />
         </RouterLink>
-        <RouterLink to="/message">
+        <RouterLink to="app/message">
           <Icon
             class="w-4 h-4 sm:w-6 sm:h-6 transition-transform duration-300 ease-in-out transform hover:scale-125 hover:rotate-12 hover:text-[#C59728] router-link-active:scale-125 router-link-active:rotate-12 router-link-active:text-[#008a8a]"
             icon="mdi:chat"
           />
         </RouterLink>
-        <RouterLink to="/notfication">
+        <RouterLink to="/app/notfication">
           <Icon
             class="w-4 h-4 sm:w-6 sm:h-6 transition-transform duration-300 ease-in-out transform hover:scale-125 hover:rotate-12 hover:text-[#C59728] router-link-active:scale-125 router-link-active:rotate-12 router-link-active:text-[#008a8a]"
             icon="mdi:bell"
           />
         </RouterLink>
-        <RouterLink to="/marketplace">
+        <RouterLink to="/app/marketplace">
           <Icon
             class="w-4 h-4 sm:w-6 sm:h-6 transition-transform duration-300 ease-in-out transform hover:scale-125 hover:rotate-12 hover:text-[#C59728] router-link-active:scale-125 router-link-active:rotate-12 router-link-active:text-[#008a8a]"
             icon="mdi:chart-line"
           />
         </RouterLink>
-        <RouterLink to="/videochat">
+        <RouterLink to="/app/videochat">
           <Icon
-            class="w-4 h-4 sm:w-6 sm:h-6 transition-transform duration-300 ease-in-out transform hover:scale-125 hover:rotate-12 hover:text-[#C59728] router-link-active:scale-125 router-link-active:rotate-12 router-link-active:text-[#008a8a]"
+            class="w-4 h-4 sm:w-6 sm:h-6 transition-transform duration-300 ease-in-out transform hover:scale-125 hover:rotate-12 hover:text-[#C/59728] router-link-active:scale-125 router-link-active:rotate-12 router-link-active:text-[#008a8a]"
             icon="mdi:video"
           />
         </RouterLink>

@@ -122,6 +122,21 @@ const formInput = reactive({
 
 let websocket;
 
+// const connectWebSocket = () => {
+//   websocket = new WebSocket("ws://localhost:8000/ws/posts/");
+//   websocket.onopen = () => {
+//     console.log("WebSocket connection established");
+//   };
+//   websocket.onmessage = (message) => {
+//     console.log("Message from server:", message.data);
+//   };
+//   websocket.onerror = (error) => {
+//     console.error("WebSocket error:", error);
+//   };
+//   websocket.onclose = () => {
+//     console.log("WebSocket connection closed");
+//   };
+// };
 const connectWebSocket = () => {
   websocket = new WebSocket("ws://localhost:8000/ws/posts/");
   websocket.onopen = () => {

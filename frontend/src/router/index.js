@@ -1,4 +1,3 @@
-
 import { createRouter, createWebHistory } from 'vue-router'
 import store from '@/store'
 import NewProduct from '@/components/NewProduct.vue'
@@ -11,9 +10,10 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/', component: () => import('../views/auth/Layout.vue'),
+      path: '/',
+      component: () => import('../views/auth/Layout.vue'),
       children: [
-        { path: '', component: () => import('../views/auth/Login.vue') },
+        { path: '', name: 'login', component: Login },
         { path: 'registration', component: () => import('../views/auth/Registration.vue') },
         { path: 'forget-password', component: () => import('../views/auth/ForgetPassword.vue') },
         { path: 'reset-password', component: () => import('../views/auth/ResetPassword.vue') }
@@ -23,33 +23,29 @@ const router = createRouter({
       }
     },
     {
-      path: '/', component: () => import('../views/auth/Layout.vue'),
+      path: '/app', // A base path for authenticated routes
+      component: () => import('../views/auth/Layout.vue'),
       children: [
         {
-          path: '/postlist',
+          path: 'postlist',
           name: 'postlist',
           component: PostList
         },
         {
-          path: '/login',
-          name: 'login',
-          component:Login
-        },
-        {
-          path: '/newpost',
+          path: 'newpost',
           name: 'newpost',
           component: NewPost
         },
         {
-          path: '/marketplace',
+          path: 'marketplace',
           name: 'marketplace',
           component: ProductList
         },
         {
-          path: '/newproduct',
+          path: 'newproduct',
           name: 'newproduct',
           component: NewProduct
-        },
+        }
       ],
       meta: {
         auth: true
@@ -63,15 +59,22 @@ router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.auth)
   const isGuest = to.matched.some(record => record.meta.guest)
 
+  console.log(`Navigating to: ${to.fullPath}`)
+  console.log(`Is authenticated: ${isAuthenticated}`)
+  console.log(`Requires auth: ${requiresAuth}`)
+  console.log(`Is guest route: ${isGuest}`)
+
   if (requiresAuth && !isAuthenticated) {
-    // If the route requires authentication and the user is not authenticated
-    next({ path: '/' }) // Redirect to the login page or any other route
+    console.log('Redirecting to login')
+    next({ path: '/' }) // Redirect to login if the route requires authentication and the user is not authenticated
   } else if (isGuest && isAuthenticated) {
-    // If the route is for guests and the user is authenticated
-    next({ path: '/postlist' }) // Redirect to a protected route or dashboard
+    console.log('Redirecting to post list')
+    next({ path: '/app/postlist' }) // Redirect to a default authenticated route
   } else {
+    console.log('Proceeding to route')
     next() // Proceed to the requested route
   }
 })
 
 export default router
+
