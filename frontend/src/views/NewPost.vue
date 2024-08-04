@@ -13,7 +13,7 @@
           <div class="flex flex-col gap-2 flex-1">
             <Field
               type="text"
-              class="px-4 py-3 border-2 rounded-lg outline-none w-full"
+              class="px-4  border-2 rounded-lg outline-none w-full"
               placeholder="Title (Optional)"
               id="title"
               name="title"
@@ -25,7 +25,7 @@
           <div class="flex flex-col gap-2 flex-1">
             <Field
               type="text"
-              class="px-4 py-3 border-2 rounded-lg outline-none w-full"
+              class="px-4  border-2 rounded-lg outline-none w-full"
               placeholder="What's happening?"
               id="description"
               name="description"
@@ -39,7 +39,7 @@
           <div class="flex flex-col gap-2 flex-1">
             <Field
               type="text"
-              class="px-4 py-3 border-2 rounded-lg outline-none w-full"
+              class="px-4  border-2 rounded-lg outline-none w-full"
               placeholder="Tags (comma separated)"
               id="tags"
               name="tags"
@@ -78,7 +78,7 @@
           </div>
           <div class="flex flex-col gap-2 w-full sm:w-[10rem]">
             <select
-              class="px-4 py-3 border-2 rounded-lg outline-none w-full"
+              class="px-4  border-2 rounded-lg outline-none w-full"
               :value="formInput.audience"
               @change="formInput.audience = $event.target.value"
             >
@@ -104,14 +104,10 @@
 <script setup>
 import { reactive, ref, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
-import { useStore } from "vuex";
-import { Form, Field, ErrorMessage } from "vee-validate";
 import * as Yup from "yup";
 import store from "@/store";
 
 const router = useRouter();
-// const store=useStore()
-
 const previewUrl = ref(null);
 const formInput = reactive({
   title: "",

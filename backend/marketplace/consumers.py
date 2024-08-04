@@ -156,8 +156,6 @@ class ProductListConsumer(WebsocketConsumer):
             }))
 
 
-
-
 class ProductUpdateConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.product_id = self.scope['url_route']['kwargs'].get('product_id')
