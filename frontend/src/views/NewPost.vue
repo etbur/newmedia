@@ -1,6 +1,6 @@
 <template>
   <main
-    class="flex flex-col gap-10 mx-10 md:mx-0 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 mt-8 sm:mt-12 md:mt-16 lg:mt-20 xl:mt-24"
+    class="flex flex-col gap-10 mx-10 md:mx-0 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 mt-8 sm:mt-12 md:mt-16 lg:mt-28 xl:mt-40"
   >
     <h1 class="text-xl font-semibold">New Post</h1>
     <div>
@@ -104,6 +104,8 @@
 <script setup>
 import { reactive, ref, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
+import { useStore } from "vuex";
+import { Form, Field, ErrorMessage } from "vee-validate";
 import * as Yup from "yup";
 import store from "@/store";
 
@@ -156,6 +158,7 @@ const validationSchema = Yup.object({
 });
 
 const onSubmit = async (values) => {
+  // const activeUser = store.state.activeUser;
   const sellerProfileName = store.state.activeUser?.name || '';
   const sellerProfilePicture = store.state.activeUser?.profilePicture || '';
 
@@ -165,11 +168,11 @@ const onSubmit = async (values) => {
       title: values.title,
       description: values.description,
       tags: values.tags.split(",").map((tag) => tag.trim()),
-      media: formInput.media, // Base64 encoded media data
+      media: formInput.media,
       location: values.location,
       audience: values.audience,
       username: sellerProfileName, 
-      profile_picture: sellerProfilePicture // Ensure this field matches the Django model
+      profile_picture: sellerProfilePicture
     },
   };
 
@@ -188,7 +191,6 @@ const onSubmit = async (values) => {
     alert("An error occurred. Please try again later.");
   }
 };
-
 
 const handleMediaUpload = (event) => {
   const file = event.target.files[0];
