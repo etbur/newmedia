@@ -17,7 +17,6 @@ This is a simple social media application built with vue js , Django, and SQlite
 - Django and  Django restframework for the backend
 - SQlite for the database
 - JWT for user authentication
-- Multer for file uploads
 - django channels for real-time communication
 
 ## Getting Started
