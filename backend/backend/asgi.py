@@ -11,14 +11,17 @@ from channels.routing import ProtocolTypeRouter
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
+from channels.security.websocket import AllowedHostsOriginValidator, OriginValidator
 import  newpost.routing 
 import marketplace.routing
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 
 application = ProtocolTypeRouter({
   'http': get_asgi_application(),
-    "websocket": AuthMiddlewareStack(
+    "websocket":AllowedHostsOriginValidator(
+      AuthMiddlewareStack(
         URLRouter(
            newpost.routing.websocket_urlpatterns+ marketplace.routing.websocket_urlpatterns
         ))
+    )
 })

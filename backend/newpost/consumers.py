@@ -12,32 +12,26 @@ from chat_app.models import  Profile
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
-
 logger = logging.getLogger(__name__)
 
 class PostCreateConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.group_name = 'posts'
         
-        # Get the user from the scope
-        self.user = self.scope.get('user')        
-        if self.user.is_authenticated:
-            await self.channel_layer.group_add(
-                self.group_name,
-                self.channel_name
-            )
-            await self.accept()
-            logger.info(f"User {self.user.username} connected to the WebSocket.")
-        else:
-            await self.close()
-            logger.warning("Unauthorized user attempted to connect.")
+        # Just accept the connection without checking user authentication
+        await self.channel_layer.group_add(
+            self.group_name,
+            self.channel_name
+        )
+        await self.accept()
+        logger.info("WebSocket connection established.")
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             self.group_name,
             self.channel_name
         )
-        logger.info(f"User {self.user.username} disconnected from the WebSocket.")
+        logger.info("WebSocket connection closed.")
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -46,7 +40,8 @@ class PostCreateConsumer(AsyncWebsocketConsumer):
         try:
             if action == 'create':
                 post_data = data.get('post')
-                post = await self.create_post(post_data, self.user)
+                # Assuming you may need to remove 'user' or handle post creation without user
+                post = await self.create_post(post_data)
                 serialized_post = await self.serialize_post(post)
                 await self.channel_layer.group_send(
                     self.group_name,
@@ -55,18 +50,18 @@ class PostCreateConsumer(AsyncWebsocketConsumer):
                         'post': serialized_post
                     }
                 )
-                logger.info(f"Post created by user: {self.user.username}")
+                logger.info("Post created.")
             else:
                 await self.send(text_data=json.dumps({'error': 'Invalid action'}))
                 logger.warning(f"Invalid action received: {action}")
         except Exception as e:
-            logger.error(f"Error processing request from user {self.user.username}: {e}")
+            logger.error(f"Error processing request: {e}")
             await self.send(text_data=json.dumps({
                 'error': f'An error occurred while processing the request: {str(e)}'
             }))
 
     @database_sync_to_async
-    def create_post(self, post_data, user):
+    def create_post(self, post_data):
         tags = post_data.pop('tags', [])
         media_data = post_data.pop('media', None)
 
@@ -79,8 +74,8 @@ class PostCreateConsumer(AsyncWebsocketConsumer):
             media_file = None
 
         with transaction.atomic():
-            # Create the post with the authenticated user
-            post = Post.objects.create(user=user, **post_data)
+            # Create the post without user or with a default user if necessary
+            post = Post.objects.create(**post_data)
 
             if media_file:
                 post.media.save(media_file.name, media_file)
@@ -116,12 +111,9 @@ class PostCreateConsumer(AsyncWebsocketConsumer):
             'tags': list(post.tags.values_list('name', flat=True)),
             'count_like': post.count_like,
             'count_comment': post.count_comment,
-            'user': {
-                'username': post.user.username if post.user else None,
-                'profile_picture': profile_picture_url
-            }
+            'username':post.username,
+            "profile_picture":post.profile_picture,
         }
-
 class PostFetchConsumer(WebsocketConsumer):
     def connect(self):
         self.group_name = 'posts'
@@ -175,11 +167,11 @@ class PostFetchConsumer(WebsocketConsumer):
             'tags': list(post.tags.values_list('name', flat=True)),
             'count_like': post.count_like,
             'count_comment': post.count_comment,
-            'user': {
-                'username': post.user.username if post.user else None,
-                'profile_picture': profile_picture_url
-            }
+            'username':post.username,
+            "profile_picture":post.profile_picture,
         }
+        
+        
 class PostLikeCommentFollow(AsyncWebsocketConsumer):
     async def connect(self):
         self.group_name = 'post_updates'

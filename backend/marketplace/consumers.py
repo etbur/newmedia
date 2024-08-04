@@ -11,18 +11,13 @@ import base64
 
 class ProductCreateConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        user = self.scope.get('user')
-        print(f"User: {user}")  # Debug user
-        if user and user.is_authenticated:
-            await self.accept()
-        else:
-            await self.close()
-    
+        await self.accept()
+           
     async def disconnect(self, close_code):
-        print(f"WebSocket closed: {close_code}")  # Debug close code
+        print(f"WebSocket closed: {close_code}")  
     
     async def receive(self, text_data):
-        print(f"Received data: {text_data}")  # Debug received data
+        print(f"Received data: {text_data}")  
         text_data_json = json.loads(text_data)
         action = text_data_json.get('action')
 
@@ -146,7 +141,7 @@ class ProductListConsumer(WebsocketConsumer):
 
     def fetch_all_products(self):
         try:
-            products = Products.objects.all()
+            products = Products.objects.all().order_by('-created_at')
             serializer = ProductSerializer(products, many=True)
             product_list = serializer.data
 

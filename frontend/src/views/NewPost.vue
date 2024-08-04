@@ -1,4 +1,3 @@
-
 <template>
   <main
     class="flex flex-col gap-10 mx-10 md:mx-0 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 mt-8 sm:mt-12 md:mt-16 lg:mt-20 xl:mt-24"
@@ -103,15 +102,15 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, onBeforeUnmount, computed } from "vue";
+import { reactive, ref, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
-import { useStore } from "vuex"; // Import useStore to access Vuex store
+import { useStore } from "vuex";
 import { Form, Field, ErrorMessage } from "vee-validate";
 import * as Yup from "yup";
 import store from "@/store";
 
-// const store = useStore();
 const router = useRouter();
+// const store=useStore()
 
 const previewUrl = ref(null);
 const formInput = reactive({
@@ -126,7 +125,15 @@ const formInput = reactive({
 let websocket;
 
 const connectWebSocket = () => {
-  websocket = new WebSocket("ws://localhost:8000/ws/posts/create");
+  const token = store.state.token; // Get token from Vuex store
+  const socketUrl = new URL("ws://localhost:8000/ws/posts/create");
+
+  if (token) {
+    socketUrl.searchParams.set("token", token); // Append token to URL
+  }
+
+  websocket = new WebSocket(socketUrl.toString());
+
   websocket.onopen = () => {
     console.log("WebSocket connection established");
   };
@@ -151,9 +158,8 @@ const validationSchema = Yup.object({
 });
 
 const onSubmit = async (values) => {
-  
-  // Get active user information from Vuex store
-  const activeUser = store.state.activeUser;
+  const sellerProfileName = store.state.activeUser?.name || '';
+  const sellerProfilePicture = store.state.activeUser?.profilePicture || '';
 
   const data = {
     action: "create",
@@ -161,11 +167,11 @@ const onSubmit = async (values) => {
       title: values.title,
       description: values.description,
       tags: values.tags.split(",").map((tag) => tag.trim()),
-      media: formInput.media,
+      media: formInput.media, // Base64 encoded media data
       location: values.location,
       audience: values.audience,
-      username: activeUser ? activeUser.username : "", 
-      profilePicture: activeUser ? activeUser.profilePicture : "" 
+      username: sellerProfileName, 
+      profile_picture: sellerProfilePicture // Ensure this field matches the Django model
     },
   };
 
@@ -174,18 +180,17 @@ const onSubmit = async (values) => {
     websocket.send(JSON.stringify(data));
     console.log("Data sent to WebSocket");
 
-    // Reset form input after sending data
     Object.keys(formInput).forEach((key) => {
       formInput[key] = "";
     });
 
-    // Optionally, navigate after submission
     await router.push("/");
   } catch (error) {
     console.error("Error sending data:", error);
     alert("An error occurred. Please try again later.");
   }
 };
+
 
 const handleMediaUpload = (event) => {
   const file = event.target.files[0];
@@ -200,7 +205,6 @@ const handleMediaUpload = (event) => {
   };
 };
 
-// Set up and clean up WebSocket connection
 onMounted(connectWebSocket);
 onBeforeUnmount(() => {
   if (websocket) {
@@ -208,4 +212,3 @@ onBeforeUnmount(() => {
   }
 });
 </script>
-

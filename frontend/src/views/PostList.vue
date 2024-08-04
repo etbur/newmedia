@@ -361,7 +361,7 @@ onUnmounted(() => {
                     class="w-10 h-10 rounded-full"
                     alt="User profile picture"
                   />
-                  <span class="text-[#C59728]">{{ post.user.username }}</span>
+                  <span class="text-[#C59728]">{{ post.username }}</span>
                 </div>
               </div>
               <div>
