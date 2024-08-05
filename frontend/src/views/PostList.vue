@@ -331,19 +331,19 @@ onUnmounted(() => {
 </script> 
 <template>
   <div
-    class="flex flex-col lg:flex-row items-center md:items-start justify-evenly gap-[5vw] md:mx-[3vw]"
+    class="flex flex-col  lg:flex-row items-center md:items-start justify-evenly gap-[5vw] md:mx-[3vw]"
   >
     <!-- Posts Section -->
-      <div class="flex flex-col gap-10 ">
+      <div class=" grid grid-col-2 sm:grid-cols-1 gap-8 ">
         <div
-          class="flex flex-col px-10 py-2  md:w-[60vw] lg:w-[40vw]  bg-[#f4f4f4] border-2 "
+          class="bg-[#f4f4f4] grid grid-cols-1 mx-10 px-8 shadow-md w-full sm:w-[35vw] "
           v-for="post in formattedPosts"
           :key="post.id"
         >
-          <div class="flex justify-end relative -right-6 py-4">
+          <div class="flex justify-end relative -right-6 mt-3">
             <Icon
               icon="mdi:close"
-              class="text-gray-800 w-6 h-6 hover:text-red-500 cursor-pointer"
+              class="text-gray-800 w-5 h-5 hover:text-red-500 cursor-pointer"
               @click="closePost(post.id)"
             />
           </div>
@@ -352,18 +352,14 @@ onUnmounted(() => {
               class="flex flex-col  gap-2 lg:flex-row lg:justify-between lg:items-center mb-5"
             >
               <!-- User Info -->
-              <div
-                class="flex flex-col gap-2 lg:flex-row lg:justify-between lg:items-center mb-5"
-              >
                 <div class="flex gap-4 items-center">
                   <img
                     :src="post.profile_picture || avatar"
                     class="w-10 h-10 rounded-full"
                     alt="User profile picture"
                   />
-                  <span class="text-[#C59728]">{{ post.username }}</span>
+                  <span class="text-[#C59728] text-sm">{{ post.username }}</span>
                 </div>
-              </div>
               <div>
                 <!-- More Options Dropdown -->
                 <div class="flex justify-between gap-2">
@@ -406,7 +402,7 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
-            <h2 class="text-lg font-medium text-[#C59728] mb-4 capitalize">
+            <h2 class="text-lg font-medium text-[#C59728] capitalize mb-2">
               {{ post.title }}
             </h2>
             <img
@@ -418,7 +414,7 @@ onUnmounted(() => {
               "
               :src="`http://localhost:8000${post.media}`"
               alt="post img"
-              class="rounded-lg  object-cover w-full h-[45vh] "
+              class="rounded-lg  object-cover  h-[45vh]"
               
             />
             <video
@@ -440,7 +436,7 @@ onUnmounted(() => {
             >
               <Icon icon="mdi:file" class=" w-12 h-12" />
             </div>
-            <p class="text-gray-800 my-8">
+            <p class="text-gray-800 my-2">
               {{
                 post.description.length > 100 && !isDescriptionExpanded(post.id)
                   ? post.description.substring(0, 100) + "..."
@@ -455,32 +451,33 @@ onUnmounted(() => {
               </button>
             </p>
             <div
-              class="flex  flex-wrap justify-between items-center text-gray-500 mb-6 bg-white  px-6 py-2 rounded-md"
+              class="flex  flex-wrap  justify-between items-center text-gray-500 mb-6   px-6  rounded-md"
             >
-              <button @click="toggleLike(post.id)" class="flex flex-col gap-2">
+              <button @click="toggleLike(post.id)" class="flex flex-col gap-2 text-sm hover:text-[#C59728]">
                 {{ post.count_like }} Likes
 
                 <Icon
                   :icon="
-                    liked.includes(post.id) ? 'mdi:heart' : 'mdi:heart-outline'
+                    liked.includes(post.id) ? 'mdi:like' : 'mdi:like-outline'  
                   "
+                  class="text-red-500"
                 />
               </button>
               <!-- Comment Button -->
               <button
-                class="flex  flex-col  hover:text-[#C59728] gap-2 "
+                class="flex  flex-col   gap-2 "
               >
-              <span class="text-sm sm:text-base flex "
+              <span class="text-sm sm:text-base flex  hover:text-[#C59728]"
               >{{ post.count_comment }} comment</span>
                 <Icon
                   v-if="isAuthenticated()"
-                  icon="mdi:comment-outline"
+                  icon="mdi:chat-outline"
                   class="cursor-pointer"
                   @click="showCommentBox(post.id)"
                 />
                 <Icon
                   v-else
-                  icon="mdi:comment-outline"
+                  icon="mdi:chat-outline"
                   class="cursor-pointer"
                   @click="showLoginModal = true"
                 />
@@ -489,15 +486,12 @@ onUnmounted(() => {
 
               <button @click="sharePost(post)" class="flex flex-col gap-2">
                 <Icon icon="mdi:share-outline" class="cursor-pointer" />
-                Share
               </button>
               <button @click="copyLinkToClipboard(post)" class="flex flex-col gap-2">
                 <Icon icon="mdi:content-copy" class="cursor-pointer" />
-                Copy link
               </button>
               <button @click="downloadMedia(post)" class="flex flex-col gap-2">
                 <Icon icon="mdi:download-outline"  class="cursor-pointer"/>
-                Download
               </button>
             
             </div>
