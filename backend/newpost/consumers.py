@@ -271,10 +271,10 @@ class PostLikeComment(AsyncWebsocketConsumer):
             await self.send_error("Post does not exist.")
         except Exception as e:
             await self.send_error(f"An error occurred while handling comment: {str(e)}")
-
-    async def fetch_comments(self, post_id):
+    @database_sync_to_async
+    def fetch_comments(self, post_id):
         try:
-            comments = await database_sync_to_async(Comment.objects.filter)(post_id=post_id)
+            comments = Comment.objects.filter(post_id=post_id)
             comments_data = [
                 {
                     "username": comment.user.username,
@@ -283,13 +283,14 @@ class PostLikeComment(AsyncWebsocketConsumer):
                 }
                 for comment in comments
             ]
-            await self.send(text_data=json.dumps({
+            self.send(text_data=json.dumps({
                 "type": "comments",
                 "post_id": post_id,
                 "comments": comments_data
             }))
         except Exception as e:
-            await self.send_error(f"An error occurred while fetching comments: {str(e)}")
+            self.send_error(f"An error occurred while fetching comments: {str(e)}")
+    
 
     async def send_like(self, event):
         await self.send(text_data=json.dumps({
