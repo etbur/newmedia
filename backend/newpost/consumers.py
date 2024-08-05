@@ -11,6 +11,8 @@ from django.contrib.auth.models import User
 from chat_app.models import  Profile
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.contrib.auth import get_user_model
+
 
 logger = logging.getLogger(__name__)
 
@@ -171,89 +173,119 @@ class PostFetchConsumer(WebsocketConsumer):
             "profile_picture":post.profile_picture,
         }
         
-        
 class PostLikeCommentFollow(AsyncWebsocketConsumer):
     async def connect(self):
-        self.group_name = 'post_updates'
-        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        self.user = self.scope["user"]
+        # Restrict access to authenticated users only
+        # if not self.user.is_authenticated:
+        #     await self.close()
+        #     return
+
+        await self.channel_layer.group_add(
+            "post_group",
+            self.channel_name
+        )
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        await self.channel_layer.group_discard(
+            "post_group",
+            self.channel_name
+        )
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        action = data.get('action')
-        username = data.get('username')
-        post_id = data.get('post_id')
-        
-        # Log received data
-        print(f"Received action: {action} from username: {username}, post_id: {post_id}")
+        action = data.get("action")
+        post_id = data.get("post_id")
+        username = data.get("username")
 
+        if action == "like":
+            liked = data.get("liked")
+            await self.handle_like(post_id, username, liked)
+        elif action == "comment":
+            content = data.get("content")
+            await self.handle_comment(post_id, username, content)
+
+    async def handle_like(self, post_id, username, liked):
         try:
-            if action == 'comment':
-                await self.handle_comment(data)
-            elif action == 'like':
-                await self.handle_like(data)
+            post = await database_sync_to_async(Post.objects.get)(id=post_id)
+            if liked:
+                post.count_like += 1
             else:
-                await self.send(text_data=json.dumps({'type': 'error', 'error': 'Invalid action'}))
-        except Exception as e:
-            logger.error(f"Error processing request: {e}")
-            await self.send(text_data=json.dumps({
-                'type': 'error',
-                'error': f'An error occurred while processing the request: {str(e)}'
-            }))
-
-    async def handle_comment(self, data):
-        try:
-            user = await database_sync_to_async(User.objects.get)(username=data['username'])
-            post = await database_sync_to_async(Post.objects.get)(id=data['post_id'])
-            content = data['content']
-
-            comment = await database_sync_to_async(Comment.objects.create)(user=user, post=post, content=content)
+                post.count_like -= 1
+            await database_sync_to_async(post.save)()
             await self.channel_layer.group_send(
-                self.group_name,
+                "post_group",
                 {
-                    'type': 'post_comment',
-                    'comment': {
-                        'id': comment.id,
-                        'post_id': comment.post.id,
-                        'content': comment.content,
-                        'created_at': str(comment.created_at),
+                    "type": "send_like",
+                    "like": {
+                        "post_id": post_id,
+                        "liked": liked
                     }
                 }
             )
-        except ObjectDoesNotExist as e:
-            logger.error(f"Object not found: {e}")
-            await self.send(text_data=json.dumps({'type': 'error', 'error': 'User or post not found'}))
+        except ObjectDoesNotExist:
+            await self.send_error("Post does not exist.")
         except Exception as e:
-            logger.error(f"Error handling comment: {e}")
-            await self.send(text_data=json.dumps({'type': 'error', 'error': 'An error occurred while handling comment'}))
+            await self.send_error(f"An error occurred while handling like: {str(e)}")
+   
+    async def handle_comment(self, post_id, username, content):
+        if not content.strip():
+            await self.send_error("Comment content cannot be empty.")
+            return
 
-    async def handle_like(self, data):
         try:
-            user = await database_sync_to_async(User.objects.get)(username=data['username'])
-            post = await database_sync_to_async(Post.objects.get)(id=data['post_id'])
+            user = self.user
+            if user.is_authenticated:
+                user = await database_sync_to_async(get_user_model().objects.get)(id=user.id)
+            else:
+                await self.send_error("User must be authenticated to comment.")
+                return
 
-            like, created = await database_sync_to_async(Like.objects.get_or_create)(user=user, post=post)
-            if not created:
-                await database_sync_to_async(like.delete)()
+            post = await database_sync_to_async(Post.objects.get)(id=post_id)
+            comment = await database_sync_to_async(Comment.objects.create)(
+                post=post,
+                user=user,
+                content=content,
+            )
+            # Increment the comment count for the post
+            post.count_comment += 1
+            await database_sync_to_async(post.save)()
 
             await self.channel_layer.group_send(
-                self.group_name,
+                "post_group",
                 {
-                    'type': 'post_like',
-                    'like': {
-                        'post_id': post.id,
-                        'created_at': str(like.created_at),
-                        'liked': created,
-                        'user': user.username
+                    "type": "send_comment",
+                    "comment": {
+                        "post_id": post_id,
+                        "username": username,
+                        "content": content,
+                        "created_at": comment.created_at.isoformat(),
                     }
                 }
             )
-        except ObjectDoesNotExist as e:
-            logger.error(f"Object not found: {e}")
-            await self.send(text_data=json.dumps({'type': 'error', 'error': 'User or post not found'}))
+        except ObjectDoesNotExist:
+            await self.send_error("Post does not exist.")
         except Exception as e:
-            logger.error(f"Error handling like: {e}")
-            await self.send(text_data=json.dumps({'type': 'error', 'error': 'An error occurred while handling like'}))
+            await self.send_error(f"An error occurred while handling comment: {str(e)}")
+
+    async def send_like(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "like",
+            "like": event["like"]
+        }))
+
+    async def send_comment(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "comment",
+            "comment": event["comment"]
+        }))
+
+    async def send_error(self, error_message):
+        await self.send(text_data=json.dumps({
+            "type": "error",
+            "error": error_message
+        }))
+
+
+

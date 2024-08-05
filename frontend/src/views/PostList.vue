@@ -1,44 +1,65 @@
- <script setup>
- import { ref, onMounted, onUnmounted, computed } from "vue";
-import { useRouter } from "vue-router";
-import { useStore } from "vuex";
-import { format } from "date-fns";
-import avatar from "../assets/avatar.png";
+<script setup>
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { format } from 'date-fns';
+import avatar from '../assets/avatar.png';
+import { Icon } from '@iconify/vue';
+import store from '@/store';
 
-const store = useStore();
-// Function to check if the user is authenticated
-const isAuthenticated = () => {
-  return !!store.state.activeUser; // Check the Vuex store for authentication status
-};
+const router = useRouter();
 
-const logCurrentUserInfo = () => {
+const fetchWebSocket = ref(null);
+const actionWebSocket = ref(null);
+const posts = ref([]);
+const liked = ref([]);
+const showLoginModal = ref(false);
+const commentBoxVisible = ref(null);
+const commentContent = ref("");
+const dropdownVisible = ref(null);
+const expandedPostId = ref(null);
+
+const isAuthenticated = () => !!store.state.activeUser;
+
+// const logCurrentUserInfo = () => {
   console.log("Current authenticated user info:", store.state.activeUser);
-};
-// Function to handle like toggling
+// };
+
 const toggleLike = (postId) => {
   if (!isAuthenticated()) {
-    showLoginModal.value = true; // Show login modal if not authenticated
+    showLoginModal.value = true;
     return;
   }
 
   const index = liked.value.indexOf(postId);
   if (index === -1) {
     liked.value.push(postId);
+    updateLikeCount(postId, true);
     sendLike(postId, true);
   } else {
     liked.value.splice(index, 1);
+    updateLikeCount(postId, false);
     sendLike(postId, false);
   }
 };
 
-// Function to send like action to WebSocket
+const updateLikeCount = (postId, liked) => {
+  const post = posts.value.find((p) => p.id === postId);
+  if (post) {
+    post.count_like += liked ? 1 : -1;
+  }
+};
+
 const sendLike = (postId, liked) => {
+  if (!postId || !store.state.activeUser) {
+    console.error("Invalid post ID or user not authenticated");
+    return;
+  }
   try {
     actionWebSocket.value.send(
       JSON.stringify({
         action: "like",
         post_id: postId,
-        username: store.state.activeUser,
+        username: store.state.activeUser.username,
         liked,
       })
     );
@@ -47,132 +68,27 @@ const sendLike = (postId, liked) => {
   }
 };
 
-// Function to handle adding a comment
 const addComment = (postId, content) => {
-  if (!isAuthenticated()) {
-    showLoginModal.value = true; // Show login modal if not authenticated
+  if (!postId || !store.state.activeUser) {
+    console.error("Invalid post ID or user not authenticated");
     return;
   }
-
   try {
     actionWebSocket.value.send(
       JSON.stringify({
         action: "comment",
         post_id: postId,
-        username: store.state.activeUser,
+        username: store.state.activeUser.username,
         content,
       })
     );
-    commentContent.value = ""; // Clear comment input after sending
-    commentBoxVisible.value = null; // Hide comment box after sending
+    commentContent.value = "";
+    commentBoxVisible.value = null;
   } catch (error) {
     console.error("Error sending comment:", error);
   }
 };
 
-import { Icon } from "@iconify/vue";
-
-const fetchWebSocket = ref(null);
-const actionWebSocket = ref(null);
-const posts = ref([]);
-const liked = ref([]);
-const currentUser = ref(null); // Initialize as null to represent unauthenticated
-
-const router = useRouter();
-const showLoginModal = ref(false); // State to control modal visibility
-
-// State to manage which post is being commented on and visibility of comment box
-const commentBoxVisible = ref(null);
-const commentContent = ref("");
-
-// State to manage which post's dropdown is visible
-const dropdownVisible = ref(null);
-const expandedPostId = ref(null); //close description
-
-
-// Function to show comment box
-const showCommentBox = (postId) => {
-  commentBoxVisible.value = postId;
-};
-
-// Function to hide comment box
-const hideCommentBox = () => {
-  commentBoxVisible.value = null;
-};
-
-// Function to toggle dropdown visibility
-const toggleDropdown = (postId) => {
-  dropdownVisible.value = dropdownVisible.value === postId ? null : postId;
-};
-
-// Function to handle editing a post
-const editPost = (postId) => {
-  console.log("Editing post:", postId);
-  // Implement the logic for editing a post
-};
-
-// Function to handle deleting a post
-const deletePost = (postId) => {
-  console.log("Deleting post:", postId);
-  // Implement the logic for deleting a post
-};
-
-// Function to handle reporting a post
-const reportPost = (postId) => {
-  console.log("Reporting post:", postId);
-  // Implement the logic for reporting a post
-};
-
-// Function to update like count locally
-const updateLikeCount = (postId, delta) => {
-  const post = posts.value.find((p) => p.id === postId);
-  if (post) {
-    post.count_like += delta;
-  }
-};
-
-// Function to share post
-const sharePost = (post) => {
-  if (navigator.share) {
-    navigator
-      .share({
-        title: post.title,
-        text: post.description,
-        url: `http://localhost:8000${post.media}`,
-      })
-      .then(() => {
-        console.log("Thanks for sharing!");
-      })
-      .catch(console.error);
-  } else {
-    alert("Web Share API is not supported in your browser.");
-  }
-};
-
-// Function to copy post link to clipboard
-const copyLinkToClipboard = (post) => {
-  const postUrl = `http://localhost:8000${post.media}`;
-  navigator.clipboard.writeText(postUrl).then(
-    () => {
-      console.log("Link copied to clipboard!");
-    },
-    (err) => {
-      console.error("Failed to copy the link: ", err);
-    }
-  );
-};
-
-// Function to download media
-const downloadMedia = (post) => {
-  const link = document.createElement("a");
-  link.href = `http://localhost:8000${post.media}`;
-  link.download = `${post.title}-${post.media.split("/").pop()}`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
-
-// Connect to WebSocket for fetching posts
 const connectFetchWebSocket = () => {
   fetchWebSocket.value = new WebSocket("ws://localhost:8000/ws/posts/fetch");
   fetchWebSocket.value.onopen = onFetchWebSocketOpen;
@@ -181,33 +97,26 @@ const connectFetchWebSocket = () => {
   fetchWebSocket.value.onclose = onWebSocketClose;
 };
 
-// Connect to WebSocket for actions (like and comment)
 const connectActionWebSocket = () => {
-  actionWebSocket.value = new WebSocket(
-    "ws://localhost:8000/ws/PostLikeCommentFollow"
-  );
+  actionWebSocket.value = new WebSocket("ws://localhost:8000/ws/PostLikeCommentFollow");
   actionWebSocket.value.onopen = onActionWebSocketOpen;
   actionWebSocket.value.onmessage = onActionWebSocketMessage;
   actionWebSocket.value.onerror = onWebSocketError;
   actionWebSocket.value.onclose = onWebSocketClose;
 };
 
-// Handle WebSocket open for fetching posts
 const onFetchWebSocketOpen = () => {
   console.log("Fetch WebSocket connection opened");
   fetchPosts();
 };
 
-// Handle WebSocket open for actions
 const onActionWebSocketOpen = () => {
   console.log("Action WebSocket connection opened");
 };
 
-// Handle incoming WebSocket messages for fetching posts
 const onFetchWebSocketMessage = (event) => {
   try {
     const data = JSON.parse(event.data);
-
     if (!data.action) {
       console.error("Received message without action field:", data);
       return;
@@ -227,26 +136,27 @@ const onFetchWebSocketMessage = (event) => {
   }
 };
 
-const onActionWebSocketMessage=(event) =>{
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'error') {
-            console.error(`WebSocket error: ${data.error}`);
-        } else if (data.type === 'comment') {
-            handleCommentUpdate(data.comment);
-        } else if (data.type === 'like') {
-            handleLikeUpdate(data.like);
-        } else {
-            console.warn('Unknown WebSocket message type:', data);
-        }
+const onActionWebSocketMessage = (event) => {
+  try {
+    const data = JSON.parse(event.data);
+    if (data.type === 'error') {
+      console.error(`WebSocket error: ${data.error}`);
+    } else if (data.type === 'comment') {
+      handleCommentUpdate(data.comment);
+    } else if (data.type === 'like') {
+      handleLikeUpdate(data.like);
+    } else {
+      console.warn('Unknown WebSocket message type:', data);
     }
+  } catch (error) {
+    console.error("Error handling WebSocket message:", error);
+  }
+};
 
-// Handle WebSocket errors
 const onWebSocketError = (error) => {
   console.error("WebSocket error:", error);
 };
 
-// Handle WebSocket closure
 const onWebSocketClose = () => {
   console.log("WebSocket connection closed");
   setTimeout(() => {
@@ -255,7 +165,6 @@ const onWebSocketClose = () => {
   }, 5000);
 };
 
-// Fetch posts from WebSocket
 const fetchPosts = () => {
   try {
     fetchWebSocket.value.send(JSON.stringify({ action: "fetch" }));
@@ -264,7 +173,8 @@ const fetchPosts = () => {
   }
 };
 
-// Handle comment updates
+
+
 const handleCommentUpdate = (comment) => {
   const post = posts.value.find((p) => p.id === comment.post_id);
   if (post) {
@@ -272,27 +182,16 @@ const handleCommentUpdate = (comment) => {
       post.comments = [];
     }
     post.comments.push(comment);
+    post.count_comment += 1; // Ensure comment count is updated
   }
 };
 
-// Handle like updates
-const handleLikeUpdate = (like) => {
-  const post = posts.value.find((p) => p.id === like.post_id);
-  if (post) {
-    if (like.liked) {
-      post.count_like += 1;
-    } else {
-      post.count_like -= 1;
-    }
-  }
-};
 
-// Handle login button click in the modal
 const handleLogin = () => {
-  router.push("/login"); // Redirect to login page
-  showLoginModal.value = false; // Hide modal after redirect
+  router.push("/login");
+  showLoginModal.value = false;
 };
-//format post date
+
 const formattedPosts = computed(() => {
   return posts.value.map((post) => ({
     ...post,
@@ -302,7 +201,6 @@ const formattedPosts = computed(() => {
     ),
   }));
 });
-//see description more
 
 const toggleDescription = (postId) => {
   expandedPostId.value = expandedPostId.value === postId ? null : postId;
@@ -311,10 +209,21 @@ const toggleDescription = (postId) => {
 const isDescriptionExpanded = (postId) => {
   return expandedPostId.value === postId;
 };
-//close post
+
 const closePost = (postId) => {
   posts.value = posts.value.filter((post) => post.id !== postId);
 };
+const showCommentBox = (postId) => {
+  if (!isAuthenticated()) {
+    showLoginModal.value = true;
+    return;
+  }
+
+  // Toggle comment box visibility
+  commentBoxVisible.value = commentBoxVisible.value === postId ? null : postId;
+};
+
+
 onMounted(() => {
   connectFetchWebSocket();
   connectActionWebSocket();
@@ -328,176 +237,187 @@ onUnmounted(() => {
     actionWebSocket.value.close();
   }
 });
-</script> 
+</script>
 <template>
-  <div
-    class="flex flex-col  lg:flex-row items-center md:items-start justify-evenly gap-[5vw] md:mx-[3vw]"
-  >
+  <div class="flex flex-col lg:flex-row items-center md:items-start justify-evenly gap-[5vw] md:mx-[3vw]">
     <!-- Posts Section -->
-      <div class=" grid grid-col-2 sm:grid-cols-1 gap-8 ">
-        <div
-          class="bg-[#f4f4f4] grid grid-cols-1 mx-10 px-8 shadow-md w-full sm:w-[35vw] "
-          v-for="post in formattedPosts"
-          :key="post.id"
-        >
-          <div class="flex justify-end relative -right-6 mt-3">
-            <Icon
-              icon="mdi:close"
-              class="text-gray-800 w-5 h-5 hover:text-red-500 cursor-pointer"
-              @click="closePost(post.id)"
-            />
-          </div>
-          <div class="flex flex-col">
-            <div
-              class="flex flex-col  gap-2 lg:flex-row lg:justify-between lg:items-center mb-5"
-            >
-              <!-- User Info -->
-                <div class="flex gap-4 items-center">
-                  <img
-                    :src="post.profile_picture || avatar"
-                    class="w-10 h-10 rounded-full"
-                    alt="User profile picture"
-                  />
-                  <span class="text-[#C59728] text-sm">{{ post.username }}</span>
-                </div>
-              <div>
-                <!-- More Options Dropdown -->
-                <div class="flex justify-between gap-2">
-                  <h2 class="text-sm mb-4 text-black capitalize">
-                    {{ post.formatted_created_at }}
-                  </h2>
-
-                  <div class="relative">
-                    <Icon
-                      icon="mdi:dots-vertical"
-                      class="text-gray-800 hover:text-[#C59728] cursor-pointer text-sm w-10 h-5 sm:text-base"
-                      @click="toggleDropdown(post.id)"
-                    />
-                    <div
-                      v-if="dropdownVisible === post.id"
-                      class="absolute -right-44 mt-3 w-48 bg-gray-50 border border-gray-300 rounded-md shadow-lg"
+    <div class="grid grid-col-2 sm:grid-cols-1 gap-8">
+      <div
+        class="bg-[#f4f4f4] grid grid-cols-1 mx-10 px-6 shadow-md w-full sm:w-[35vw]"
+        v-for="post in formattedPosts"
+        :key="post.id"
+      >
+        <div class="flex justify-end relative -right-3 mt-3 mb-2">
+          <Icon
+            icon="mdi:close"
+            class="text-gray-800 w-5 h-5 hover:text-red-500 cursor-pointer"
+            @click="closePost(post.id)"
+          />
+        </div>
+        <div class="flex flex-col">
+          <div class="flex flex-col gap-2 lg:flex-row lg:justify-between lg:items-center mb-5">
+            <!-- User Info -->
+            <div class="flex gap-4 items-center">
+              <img
+                :src="post.profile_picture || avatar"
+                class="w-10 h-10 rounded-full"
+                alt="User profile picture"
+              />
+              <span class="text-[#C59728] text-sm">{{ post.username }}</span>
+            </div>
+            <div>
+              <!-- More Options Dropdown -->
+              <div class="relative">
+                <Icon
+                  icon="mdi:dots-vertical"
+                  class="text-gray-800 hover:text-[#C59728] cursor-pointer text-sm w-10 h-5 sm:text-base"
+                  @click="toggleDropdown(post.id)"
+                />
+                <div
+                  v-if="dropdownVisible === post.id"
+                  class="absolute -right-44 mt-3 w-48 bg-gray-50 border border-gray-300 rounded-md shadow-lg"
+                >
+                  <ul>
+                    <li
+                      class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      @click="editPost(post.id)"
                     >
-                      <ul>
-                        <li
-                          class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                          @click="editPost(post.id)"
-                        >
-                          Edit Post
-                        </li>
-                        <li
-                          class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                          @click="deletePost(post.id)"
-                        >
-                          Delete Post
-                        </li>
-                        <li
-                          class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                          @click="reportPost(post.id)"
-                        >
-                          Report Post
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+                      Edit Post
+                    </li>
+                    <li
+                      class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      @click="deletePost(post.id)"
+                    >
+                      Delete Post
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
-            <h2 class="text-lg font-medium text-[#C59728] capitalize mb-2">
-              {{ post.title }}
-            </h2>
+          </div>
+          <h2 class="text-lg font-medium text-[#C59728] capitalize mb-2">
+            {{ post.title }}
+          </h2>
+          <img
+            v-if="
+              post.media &&
+              (post.media.endsWith('.jpeg') ||
+                post.media.endsWith('.jpg') ||
+                post.media.endsWith('.png'))
+            "
+            :src="`http://localhost:8000${post.media}`"
+            alt="post img"
+            class="rounded-lg object-cover h-[45vh]"
+          />
+          <video
+            v-else-if="
+              post.media &&
+              (post.media.endsWith('.mp4') ||
+                post.media.endsWith('.mov') ||
+                post.media.endsWith('.avi'))
+            "
+            :src="`http://localhost:8000${post.media}`"
+            controls
+            class="rounded-lg h-auto"
+          >
+            Your browser does not support the video tag.
+          </video>
+          <div
+            v-else
+            class="bg-gray-200 rounded-lg w-32 h-32 flex items-center justify-center"
+          >
+            <Icon icon="mdi:file" class="w-12 h-12" />
+          </div>
+          <p class="text-gray-800 my-2">
+            {{
+              post.description.length > 100 && !isDescriptionExpanded(post.id)
+                ? post.description.substring(0, 100) + "..."
+                : post.description
+            }}
+            <button
+              v-if="post.description.length > 100"
+              @click="toggleDescription(post.id)"
+              class="text-[#C59728] underline"
+            >
+              {{ isDescriptionExpanded(post.id) ? "Show less" : "Show more" }}
+            </button>
+          </p>
+          <div
+            class="flex flex-wrap justify-between items-center text-gray-500 mb-6 px-6 rounded-md"
+          >
+            <button @click="toggleLike(post.id)" class="flex flex-col gap-2 text-sm hover:text-[#C59728]">
+              {{ post.count_like }} Likes
+              <Icon
+                :icon="liked.includes(post.id) ? 'mdi:like' : 'mdi:like-outline'"
+                class="text-red-500"
+              />
+            </button>
+            <!-- Comment Button -->
+            <button class="flex flex-col gap-2">
+              <span class="text-sm sm:text-base flex hover:text-[#C59728]">
+                {{ post.count_comment }} comment
+              </span>
+              <Icon
+                :icon="isAuthenticated() ? 'mdi:chat-outline' : 'mdi:chat-outline'"
+                class="cursor-pointer"
+                @click="isAuthenticated() ? showCommentBox(post.id) : showLoginModal = true"
+              />
+            </button>
+            <button @click="sharePost(post)" class="flex flex-col gap-2">
+              <Icon icon="mdi:share-outline" class="cursor-pointer" />
+            </button>
+            <button @click="copyLinkToClipboard(post)" class="flex flex-col gap-2">
+              <Icon icon="mdi:content-copy" class="cursor-pointer" />
+            </button>
+            <button @click="downloadMedia(post)" class="flex flex-col gap-2">
+              <Icon icon="mdi:download-outline" class="cursor-pointer" />
+            </button>
+          </div>
+        </div>
+        <!-- Comment Box -->
+        <div
+          v-if="commentBoxVisible === post.id"
+          class="border-t-2 border-gray-200 pt-3"
+        >
+          <div class="flex items-center gap-4">
             <img
-              v-if="
-                post.media &&
-                (post.media.endsWith('.jpeg') ||
-                  post.media.endsWith('.jpg') ||
-                  post.media.endsWith('.png'))
-              "
-              :src="`http://localhost:8000${post.media}`"
-              alt="post img"
-              class="rounded-lg  object-cover  h-[45vh]"
-              
+              :src="store.state.activeUser?.profile_picture || avatar"
+              class="w-8 h-8 rounded-full"
+              alt="User profile picture"
             />
-            <video
-              v-else-if="
-                post.media &&
-                (post.media.endsWith('.mp4') ||
-                  post.media.endsWith('.mov') ||
-                  post.media.endsWith('.avi'))
-              "
-              :src="`http://localhost:8000${post.media}`"
-              controls
-              class="rounded-lg h-auto"
+            <input
+              v-model="commentContent"
+              type="text"
+              placeholder="Add a comment..."
+              class="w-full p-2 border border-gray-300 rounded-md"
+            />
+            <button
+              @click="addComment(post.id, commentContent)"
+              class="bg-[#C59728] text-white p-2 rounded-md"
             >
-              Your browser does not support the video tag.
-            </video>
+              Submit
+            </button>
+          </div>
+          <div class="mt-4">
             <div
-              v-else
-              class="bg-gray-200 rounded-lg w-32 h-32 flex items-center justify-center"
+              v-for="comment in post.comments"
+              :key="comment.id"
+              class="flex items-start gap-2 mb-2"
             >
-              <Icon icon="mdi:file" class=" w-12 h-12" />
-            </div>
-            <p class="text-gray-800 my-2">
-              {{
-                post.description.length > 100 && !isDescriptionExpanded(post.id)
-                  ? post.description.substring(0, 100) + "..."
-                  : post.description
-              }}
-              <button
-                v-if="post.description.length > 100"
-                @click="toggleDescription(post.id)"
-                class="text-[#C59728] underline"
-              >
-                {{ isDescriptionExpanded(post.id) ? "Show less" : "Show more" }}
-              </button>
-            </p>
-            <div
-              class="flex  flex-wrap  justify-between items-center text-gray-500 mb-6   px-6  rounded-md"
-            >
-              <button @click="toggleLike(post.id)" class="flex flex-col gap-2 text-sm hover:text-[#C59728]">
-                {{ post.count_like }} Likes
-
-                <Icon
-                  :icon="
-                    liked.includes(post.id) ? 'mdi:like' : 'mdi:like-outline'  
-                  "
-                  class="text-red-500"
-                />
-              </button>
-              <!-- Comment Button -->
-              <button
-                class="flex  flex-col   gap-2 "
-              >
-              <span class="text-sm sm:text-base flex  hover:text-[#C59728]"
-              >{{ post.count_comment }} comment</span>
-                <Icon
-                  v-if="isAuthenticated()"
-                  icon="mdi:chat-outline"
-                  class="cursor-pointer"
-                  @click="showCommentBox(post.id)"
-                />
-                <Icon
-                  v-else
-                  icon="mdi:chat-outline"
-                  class="cursor-pointer"
-                  @click="showLoginModal = true"
-                />
-               
-              </button>
-
-              <button @click="sharePost(post)" class="flex flex-col gap-2">
-                <Icon icon="mdi:share-outline" class="cursor-pointer" />
-              </button>
-              <button @click="copyLinkToClipboard(post)" class="flex flex-col gap-2">
-                <Icon icon="mdi:content-copy" class="cursor-pointer" />
-              </button>
-              <button @click="downloadMedia(post)" class="flex flex-col gap-2">
-                <Icon icon="mdi:download-outline"  class="cursor-pointer"/>
-              </button>
-            
+              <img
+                :src="comment.profile_picture || avatar"
+                class="w-6 h-6 rounded-full"
+                alt="Commenter profile picture"
+              />
+              <div>
+                <span class="font-semibold">{{ comment.username }}</span>
+                <p>{{ comment.content }}</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
     <!-- Sidebar Section -->
     <div class="grid grid-cols-2 md:grid-cols-1 gap-10 w-[25vw] h-auto">
       <div class="bg-[#edeaea] rounded-lg shadow-md p-6">
@@ -528,7 +448,7 @@ onUnmounted(() => {
         </button>
         <button
           @click="showLoginModal = false"
-          class="bg-gray-200 px-4 py-2 rounded"
+          class="bg-gray-500 text-white px-4 py-2 rounded"
         >
           Cancel
         </button>
@@ -536,5 +456,3 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-
-
