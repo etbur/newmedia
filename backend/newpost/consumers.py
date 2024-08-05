@@ -172,14 +172,15 @@ class PostFetchConsumer(WebsocketConsumer):
             'username':post.username,
             "profile_picture":post.profile_picture,
         }
-        
-class PostLikeCommentFollow(AsyncWebsocketConsumer):
+
+
+class PostLikeComment(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
         # Restrict access to authenticated users only
-        # if not self.user.is_authenticated:
-        #     await self.close()
-        #     return
+        if not self.user.is_authenticated:
+            await self.close()
+            return
 
         await self.channel_layer.group_add(
             "post_group",
@@ -205,6 +206,8 @@ class PostLikeCommentFollow(AsyncWebsocketConsumer):
         elif action == "comment":
             content = data.get("content")
             await self.handle_comment(post_id, username, content)
+        elif action == "fetch_comments":
+            await self.fetch_comments(post_id)
 
     async def handle_like(self, post_id, username, liked):
         try:
@@ -228,7 +231,7 @@ class PostLikeCommentFollow(AsyncWebsocketConsumer):
             await self.send_error("Post does not exist.")
         except Exception as e:
             await self.send_error(f"An error occurred while handling like: {str(e)}")
-   
+
     async def handle_comment(self, post_id, username, content):
         if not content.strip():
             await self.send_error("Comment content cannot be empty.")
@@ -269,6 +272,25 @@ class PostLikeCommentFollow(AsyncWebsocketConsumer):
         except Exception as e:
             await self.send_error(f"An error occurred while handling comment: {str(e)}")
 
+    async def fetch_comments(self, post_id):
+        try:
+            comments = await database_sync_to_async(Comment.objects.filter)(post_id=post_id)
+            comments_data = [
+                {
+                    "username": comment.user.username,
+                    "content": comment.content,
+                    "created_at": comment.created_at.isoformat(),
+                }
+                for comment in comments
+            ]
+            await self.send(text_data=json.dumps({
+                "type": "comments",
+                "post_id": post_id,
+                "comments": comments_data
+            }))
+        except Exception as e:
+            await self.send_error(f"An error occurred while fetching comments: {str(e)}")
+
     async def send_like(self, event):
         await self.send(text_data=json.dumps({
             "type": "like",
@@ -286,6 +308,5 @@ class PostLikeCommentFollow(AsyncWebsocketConsumer):
             "type": "error",
             "error": error_message
         }))
-
 
 

@@ -1,10 +1,10 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { format } from 'date-fns';
-import avatar from '../assets/avatar.png';
-import { Icon } from '@iconify/vue';
-import store from '@/store';
+import { ref, onMounted, onUnmounted, computed } from "vue";
+import { useRouter } from "vue-router";
+import { format } from "date-fns";
+import avatar from "../assets/avatar.png";
+import { Icon } from "@iconify/vue";
+import store from "@/store";
 
 const router = useRouter();
 
@@ -21,7 +21,7 @@ const expandedPostId = ref(null);
 const isAuthenticated = () => !!store.state.activeUser;
 
 // const logCurrentUserInfo = () => {
-  console.log("Current authenticated user info:", store.state.activeUser);
+console.log("Current authenticated user info:", store.state.activeUser);
 // };
 
 const toggleLike = (postId) => {
@@ -98,7 +98,9 @@ const connectFetchWebSocket = () => {
 };
 
 const connectActionWebSocket = () => {
-  actionWebSocket.value = new WebSocket("ws://localhost:8000/ws/PostLikeCommentFollow");
+  actionWebSocket.value = new WebSocket(
+    "ws://localhost:8000/ws/PostLikeComment"
+  );
   actionWebSocket.value.onopen = onActionWebSocketOpen;
   actionWebSocket.value.onmessage = onActionWebSocketMessage;
   actionWebSocket.value.onerror = onWebSocketError;
@@ -139,19 +141,40 @@ const onFetchWebSocketMessage = (event) => {
 const onActionWebSocketMessage = (event) => {
   try {
     const data = JSON.parse(event.data);
-    if (data.type === 'error') {
+    if (data.type === "error") {
       console.error(`WebSocket error: ${data.error}`);
-    } else if (data.type === 'comment') {
+    } else if (data.type === "comment") {
       handleCommentUpdate(data.comment);
-    } else if (data.type === 'like') {
+    } else if (data.type === "like") {
       handleLikeUpdate(data.like);
     } else {
-      console.warn('Unknown WebSocket message type:', data);
+      console.warn("Unknown WebSocket message type:", data);
     }
   } catch (error) {
     console.error("Error handling WebSocket message:", error);
   }
 };
+
+const handleCommentUpdate = (comment) => {
+  const post = posts.value.find((p) => p.id === comment.post_id);
+  if (post) {
+    if (!post.comments) {
+      post.comments = [];
+    }
+    post.comments.push(comment);
+    post.count_comment += 1; // Ensure comment count is updated
+  }
+};
+const showCommentBox = (postId) => {
+  if (!isAuthenticated()) {
+    showLoginModal.value = true;
+    return;
+  }
+
+  // Toggle comment box visibility
+  commentBoxVisible.value = commentBoxVisible.value === postId ? null : postId;
+};
+
 
 const onWebSocketError = (error) => {
   console.error("WebSocket error:", error);
@@ -170,19 +193,6 @@ const fetchPosts = () => {
     fetchWebSocket.value.send(JSON.stringify({ action: "fetch" }));
   } catch (error) {
     console.error("Error sending fetch request:", error);
-  }
-};
-
-
-
-const handleCommentUpdate = (comment) => {
-  const post = posts.value.find((p) => p.id === comment.post_id);
-  if (post) {
-    if (!post.comments) {
-      post.comments = [];
-    }
-    post.comments.push(comment);
-    post.count_comment += 1; // Ensure comment count is updated
   }
 };
 
@@ -213,16 +223,19 @@ const isDescriptionExpanded = (postId) => {
 const closePost = (postId) => {
   posts.value = posts.value.filter((post) => post.id !== postId);
 };
-const showCommentBox = (postId) => {
-  if (!isAuthenticated()) {
-    showLoginModal.value = true;
-    return;
-  }
 
-  // Toggle comment box visibility
-  commentBoxVisible.value = commentBoxVisible.value === postId ? null : postId;
-};
-
+// const fetchComments = (postId) => {
+//   try {
+//     actionWebSocket.value.send(
+//       JSON.stringify({
+//         action: "fetch_comments",
+//         post_id: postId,
+//       })
+//     );
+//   } catch (error) {
+//     console.error("Error sending fetch comments request:", error);
+//   }
+// };
 
 onMounted(() => {
   connectFetchWebSocket();
@@ -239,7 +252,9 @@ onUnmounted(() => {
 });
 </script>
 <template>
-  <div class="flex flex-col lg:flex-row items-center md:items-start justify-evenly gap-[5vw] md:mx-[3vw]">
+  <div
+    class="flex flex-col lg:flex-row items-center md:items-start justify-evenly gap-[5vw] md:mx-[3vw]"
+  >
     <!-- Posts Section -->
     <div class="grid grid-col-2 sm:grid-cols-1 gap-8">
       <div
@@ -255,7 +270,9 @@ onUnmounted(() => {
           />
         </div>
         <div class="flex flex-col">
-          <div class="flex flex-col gap-2 lg:flex-row lg:justify-between lg:items-center mb-5">
+          <div
+            class="flex flex-col gap-2 lg:flex-row lg:justify-between lg:items-center mb-5"
+          >
             <!-- User Info -->
             <div class="flex gap-4 items-center">
               <img
@@ -345,10 +362,15 @@ onUnmounted(() => {
           <div
             class="flex flex-wrap justify-between items-center text-gray-500 mb-6 px-6 rounded-md"
           >
-            <button @click="toggleLike(post.id)" class="flex flex-col gap-2 text-sm hover:text-[#C59728]">
+            <button
+              @click="toggleLike(post.id)"
+              class="flex flex-col gap-2 text-sm hover:text-[#C59728]"
+            >
               {{ post.count_like }} Likes
               <Icon
-                :icon="liked.includes(post.id) ? 'mdi:like' : 'mdi:like-outline'"
+                :icon="
+                  liked.includes(post.id) ? 'mdi:like' : 'mdi:like-outline'
+                "
                 class="text-red-500"
               />
             </button>
@@ -358,15 +380,33 @@ onUnmounted(() => {
                 {{ post.count_comment }} comment
               </span>
               <Icon
-                :icon="isAuthenticated() ? 'mdi:chat-outline' : 'mdi:chat-outline'"
+                :icon="
+                  isAuthenticated() ? 'mdi:chat-outline' : 'mdi:chat-outline'
+                "
                 class="cursor-pointer"
-                @click="isAuthenticated() ? showCommentBox(post.id) : showLoginModal = true"
+                @click="
+                  isAuthenticated()
+                    ? showCommentBox(post.id)
+                    : (showLoginModal = true)
+                "
               />
+  
             </button>
+            <!-- Comment  a post -->
+
+            <div v-for="comment in comments" :key="comment.created_at">
+                <strong>{{ comment.username }}</strong
+                >: {{ comment.content }}
+                <br />
+                <small>{{ comment.created_at }}</small>
+              </div>
             <button @click="sharePost(post)" class="flex flex-col gap-2">
               <Icon icon="mdi:share-outline" class="cursor-pointer" />
             </button>
-            <button @click="copyLinkToClipboard(post)" class="flex flex-col gap-2">
+            <button
+              @click="copyLinkToClipboard(post)"
+              class="flex flex-col gap-2"
+            >
               <Icon icon="mdi:content-copy" class="cursor-pointer" />
             </button>
             <button @click="downloadMedia(post)" class="flex flex-col gap-2">
@@ -399,7 +439,7 @@ onUnmounted(() => {
             </button>
           </div>
           <div class="mt-4">
-            <div
+            <!-- <div
               v-for="comment in post.comments"
               :key="comment.id"
               class="flex items-start gap-2 mb-2"
@@ -413,7 +453,7 @@ onUnmounted(() => {
                 <span class="font-semibold">{{ comment.username }}</span>
                 <p>{{ comment.content }}</p>
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
