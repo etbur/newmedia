@@ -20,10 +20,6 @@ const expandedPostId = ref(null);
 
 const isAuthenticated = () => !!store.state.activeUser;
 
-// const logCurrentUserInfo = () => {
-console.log("Current authenticated user info:", store.state.activeUser);
-// };
-
 const toggleLike = (postId) => {
   if (!isAuthenticated()) {
     showLoginModal.value = true;
@@ -107,13 +103,61 @@ const connectActionWebSocket = () => {
   actionWebSocket.value.onclose = onWebSocketClose;
 };
 
+const handleLikeUpdate = (likeUpdate) => {
+  const { post_id, liked } = likeUpdate;
+  const post = posts.value.find((p) => p.id === post_id);
+  if (post) {
+    if (liked) {
+      post.count_like += 1;
+    } else {
+      post.count_like -= 1;
+    }
+  }
+};
+
+const handleCommentUpdate = (comment) => {
+  const post = posts.value.find((p) => p.id === comment.post_id);
+  if (post) {
+    if (!post.comments) {
+      post.comments = [];
+    }
+    post.comments.push(comment);
+    post.count_comment += 1;
+  }
+};
+
+const showCommentBox = (postId) => {
+  if (!isAuthenticated()) {
+    showLoginModal.value = true;
+    return;
+  }
+
+  commentBoxVisible.value = commentBoxVisible.value === postId ? null : postId;
+  if (commentBoxVisible.value === postId) {
+    fetchComments(postId); // Fetch comments when the box is shown
+  }
+};
+
+const fetchComments = (postId) => {
+  try {
+    actionWebSocket.value.send(
+      JSON.stringify({
+        action: "fetch_comments",
+        post_id: postId,
+      })
+    );
+  } catch (error) {
+    console.error("Error sending fetch comments request:", error);
+  }
+};
+
 const onFetchWebSocketOpen = () => {
-  console.log("Fetch WebSocket connection opened");
+  console.log("Fetch WebSocket connection opened on post");
   fetchPosts();
 };
 
 const onActionWebSocketOpen = () => {
-  console.log("Action WebSocket connection opened");
+  console.log("Action WebSocket connection opened on post");
 };
 
 const onFetchWebSocketMessage = (event) => {
@@ -147,6 +191,8 @@ const onActionWebSocketMessage = (event) => {
       handleCommentUpdate(data.comment);
     } else if (data.type === "like") {
       handleLikeUpdate(data.like);
+    } else if (data.type === "comments") {
+      updatePostComments(data.post_id, data.comments);
     } else {
       console.warn("Unknown WebSocket message type:", data);
     }
@@ -155,29 +201,52 @@ const onActionWebSocketMessage = (event) => {
   }
 };
 
-const handleCommentUpdate = (comment) => {
-  const post = posts.value.find((p) => p.id === comment.post_id);
+const updatePostComments = (postId, comments) => {
+  const post = posts.value.find((p) => p.id === postId);
   if (post) {
-    if (!post.comments) {
-      post.comments = [];
-    }
-    post.comments.push(comment);
-    post.count_comment += 1; // Ensure comment count is updated
+    post.comments = comments;
+  } else {
+    console.warn("Post not found for comments update:", postId);
   }
 };
-const showCommentBox = (postId) => {
-  if (!isAuthenticated()) {
-    showLoginModal.value = true;
-    return;
-  }
-
-  // Toggle comment box visibility
-  commentBoxVisible.value = commentBoxVisible.value === postId ? null : postId;
-};
-
 
 const onWebSocketError = (error) => {
   console.error("WebSocket error:", error);
+};
+const downloadMedia = (post) => {
+  const mediaUrl = `http://localhost:8000${post.media}`;
+  const link = document.createElement('a');
+  link.href = mediaUrl;
+  link.download = post.media.split('/').pop(); // Filename
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+const copyLinkToClipboard = (post) => {
+  const url = `http://localhost:8000/posts/${post.id}`;
+  navigator.clipboard.writeText(url).then(() => {
+    console.log('Link copied to clipboard');
+  }).catch(err => {
+    console.error('Error copying link:', err);
+  });
+};
+const sharePost = async (post) => {
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: post.title,
+        text: post.description,
+        url: `http://localhost:8000/posts/${post.id}`,
+      });
+      console.log('Post shared successfully');
+    } catch (error) {
+      console.error('Error sharing post:', error);
+    }
+  } else {
+    console.warn('Web Share API is not supported in this browser.');
+    // Fallback to other sharing methods or show a message
+  }
 };
 
 const onWebSocketClose = () => {
@@ -195,7 +264,6 @@ const fetchPosts = () => {
     console.error("Error sending fetch request:", error);
   }
 };
-
 
 const handleLogin = () => {
   router.push("/login");
@@ -224,19 +292,6 @@ const closePost = (postId) => {
   posts.value = posts.value.filter((post) => post.id !== postId);
 };
 
-// const fetchComments = (postId) => {
-//   try {
-//     actionWebSocket.value.send(
-//       JSON.stringify({
-//         action: "fetch_comments",
-//         post_id: postId,
-//       })
-//     );
-//   } catch (error) {
-//     console.error("Error sending fetch comments request:", error);
-//   }
-// };
-
 onMounted(() => {
   connectFetchWebSocket();
   connectActionWebSocket();
@@ -251,6 +306,7 @@ onUnmounted(() => {
   }
 });
 </script>
+
 <template>
   <div
     class="flex flex-col lg:flex-row items-center md:items-start justify-evenly gap-[5vw] md:mx-[3vw]"
@@ -390,72 +446,79 @@ onUnmounted(() => {
                     : (showLoginModal = true)
                 "
               />
-  
             </button>
-            <!-- Comment  a post -->
 
-            <div v-for="comment in comments" :key="comment.created_at">
-                <strong>{{ comment.username }}</strong
-                >: {{ comment.content }}
-                <br />
-                <small>{{ comment.created_at }}</small>
-              </div>
             <button @click="sharePost(post)" class="flex flex-col gap-2">
-              <Icon icon="mdi:share-outline" class="cursor-pointer" />
-            </button>
-            <button
-              @click="copyLinkToClipboard(post)"
-              class="flex flex-col gap-2"
-            >
-              <Icon icon="mdi:content-copy" class="cursor-pointer" />
-            </button>
-            <button @click="downloadMedia(post)" class="flex flex-col gap-2">
-              <Icon icon="mdi:download-outline" class="cursor-pointer" />
-            </button>
+            <Icon icon="mdi:share-outline" class="cursor-pointer"  title="Share"/>
+          </button>
+          <button @click="copyLinkToClipboard(post)" class="flex flex-col gap-2">
+            <Icon icon="mdi:content-copy" class="cursor-pointer" title="copyLink" />
+          </button>
+          <button @click="downloadMedia(post)" class="flex flex-col gap-2">
+            <Icon icon="mdi:download-outline" class="cursor-pointer"  title="Download"/>
+          </button>
           </div>
         </div>
-        <!-- Comment Box -->
-        <div
-          v-if="commentBoxVisible === post.id"
-          class="border-t-2 border-gray-200 pt-3"
-        >
-          <div class="flex items-center gap-4">
-            <img
-              :src="store.state.activeUser?.profile_picture || avatar"
-              class="w-8 h-8 rounded-full"
-              alt="User profile picture"
-            />
-            <input
-              v-model="commentContent"
-              type="text"
-              placeholder="Add a comment..."
-              class="w-full p-2 border border-gray-300 rounded-md"
-            />
-            <button
-              @click="addComment(post.id, commentContent)"
-              class="bg-[#C59728] text-white p-2 rounded-md"
-            >
-              Submit
-            </button>
-          </div>
-          <div class="mt-4">
-            <!-- <div
-              v-for="comment in post.comments"
-              :key="comment.id"
-              class="flex items-start gap-2 mb-2"
-            >
-              <img
-                :src="comment.profile_picture || avatar"
-                class="w-6 h-6 rounded-full"
-                alt="Commenter profile picture"
-              />
-              <div>
-                <span class="font-semibold">{{ comment.username }}</span>
-                <p>{{ comment.content }}</p>
+
+        
+          <div
+            v-if="commentBoxVisible === post.id"
+            class="border-t-2 border-gray-200 py-3"
+          >
+            <div class="flex flex-col gap-2">
+              <!-- Comment Box Header -->
+              <div class="flex items-center gap-4 mb-2">
+                <img
+                  :src="store.state.activeUser?.profile_picture || avatar"
+                  class="w-8 h-8 rounded-full"
+                  alt="User profile picture"
+                />
+                <input
+                  v-model="commentContent"
+                  type="text"
+                  placeholder="Add a comment..."
+                  class="w-full p-2 border border-gray-300 rounded-md"
+                />
+                <button
+                  @click="addComment(post.id, commentContent)"
+                  class="bg-[#C59728] text-white p-2 rounded-md"
+                >
+                  Submit
+                </button>
               </div>
-            </div> -->
+
+              <!-- Display Comments -->
+              <div
+                v-if="post.comments && post.comments.length"
+                class="space-y-2"
+              >
+                <div
+                  v-for="comment in post.comments"
+                  :key="comment.created_at"
+                  class="flex items-start gap-2"
+                >
+                  <img
+                    :src="comment.profile_picture || avatar"
+                    class="w-8 h-8 rounded-full"
+                    alt="User profile picture"
+                  />
+                  <div class="flex flex-col">
+                    <span class="font-semibold">{{ comment.username }}</span>
+                    <p class="text-gray-800">{{ comment.content }}</p>
+                    <span class="text-gray-500 text-xs">{{
+                      format(
+                        new Date(comment.created_at),
+                        "MMMM d, yyyy, HH:mm"
+                      )
+                    }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else>
+                <p class="text-gray-500">No comments yet.</p>
+              </div>
+            </div>
           </div>
-        </div>
       </div>
     </div>
     <!-- Sidebar Section -->
