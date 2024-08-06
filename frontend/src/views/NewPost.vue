@@ -49,7 +49,7 @@
             <ErrorMessage name="tags" class="text-red-500" />
           </div>
           <div class="flex flex-col gap-2 flex-1">
-            <div class="relative flex gap-2">
+            <div class="relative ">
               <Field
                 type="file"
                 class="px-4 py-3 border-2 rounded-lg outline-none w-full"
@@ -58,10 +58,10 @@
                 @change="handleMediaUpload"
               />
               <ErrorMessage name="media" class="text-red-500" />
-              <div v-if="previewUrl">
-                <img :src="previewUrl" class="max-h-21 w-full object-contain" />
-              </div>
             </div>
+            <div v-if="previewUrl"  class="mt-2">
+                <img :src="previewUrl" class=" w-[25vw] h-[25vh] object-contain" />
+              </div>
           </div>
         </div>
         <div class="flex flex-col sm:flex-row gap-5">

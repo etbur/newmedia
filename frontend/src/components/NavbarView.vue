@@ -44,7 +44,7 @@ const showSidebar = ref(false);
 
     <!-- Main Navigation -->
     <nav
-      class="flex flex-col gap-5 sm:flex-row sm:gap-10 p-3 md:py-2 bg-[#F1F1F1] justify-between items-center px-[7vw] shadow-md"
+      class="flex flex-col gap-5 sm:flex-row sm:gap-10  bg-[#F1F1F1] justify-between items-center px-[7vw] shadow-md"
     >
       <div class="flex gap-6 sm:gap-11">
         <RouterLink to="/app/friends" >
@@ -116,7 +116,7 @@ const showSidebar = ref(false);
     <!-- Sidebar -->
     <div
       v-if="showSidebar"
-      class="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 z-10 md:hidden"
+      class="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 z-10 md:hidden "
     >
       <div
         class="bg-white w-full mt-[9vh] p-6 overflow-y-auto transition-transform duration-300 ease-in-out"
@@ -128,7 +128,7 @@ const showSidebar = ref(false);
         <div class="flex  items-center gap-6 space-y-4">
           <router-link
             @click="showSidebar = false"
-            to="/newpost"
+            to="/app/newpost"
             active-class="bg-[#E2E2E2] text-[#C59728]"
             class="flex items-center gap-1 min-w-fit border-2 border-[#008a8a] border-opacity-10 rounded-md px-4 py-1 mt-4"
             exact-active-class="bg-[#E2E2E2] text-[#C59728] py-1"
