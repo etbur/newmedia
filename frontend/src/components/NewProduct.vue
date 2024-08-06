@@ -1,10 +1,8 @@
-
 <script setup>
 import { reactive, onMounted, onBeforeUnmount, ref } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 
-// const store = useStore();
 import store from '@/store';
 const router = useRouter();
 
@@ -17,6 +15,7 @@ const productData = reactive({
 });
 
 const fileInput = ref(null);
+const imagePreviewUrl = ref(null); // For image preview
 
 let productSocket;
 let categorySocket;
@@ -123,6 +122,8 @@ const createProduct = async () => {
       category: '',
     });
 
+    imagePreviewUrl.value = null; // Reset image preview
+
     if (fileInput.value) {
       fileInput.value.value = '';
     }
@@ -130,20 +131,36 @@ const createProduct = async () => {
 };
 
 const categories = ref([]);
+
+// Update image preview URL when a file is selected
+const handleImageChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      imagePreviewUrl.value = reader.result;
+    };
+    reader.readAsDataURL(file);
+    productData.image = file;
+  } else {
+    imagePreviewUrl.value = null;
+    productData.image = null;
+  }
+};
 </script>
 
 <template>
-  <div class="flex flex-col gap-16">
-    <h2 class="text-[#008a8a] font-medium text-xl">Add New Product</h2>
-    <form @submit.prevent="createProduct" class="flex flex-col gap-7">
-      <div class="flex gap-[5%]">
+  <div class="flex flex-col gap-7 mx-[10vw] md:ml-[10vw]">
+    <h2 class="text-[#008a8a] font-medium text-xl">Sell  a Product...</h2>
+    <form @submit.prevent="createProduct" class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4  md:flex-row md:gap-[5%]">
         <input
           type="text"
           id="name"
           v-model="productData.name"
           required
           placeholder="Enter Product name?"
-          class="py-4 px-4 border border-[#008A8A] border-opacity-20 w-[30vw] outline-none rounded-md"
+          class="py-3 px-4 border border-[#008A8A] border-opacity-20  w-full md:w-[31vw] outline-none rounded-md"
         />
         <input
           type="number"
@@ -152,26 +169,30 @@ const categories = ref([]);
           step="0.01"
           required
           placeholder="Price Br"
-          class="py-4 px-4 border border-[#008A8A] border-opacity-20 w-[8vw] outline-none rounded-md"
+          class="py-3 px-4 border border-[#008A8A] border-opacity-20 w-full md:w-[8vw] outline-none rounded-md"
         />
       </div>
-      <div>
+      <div class="">
         <input
           type="file"
           id="image"
           ref="fileInput"
-          @change="productData.image = $event.target.files[0]"
+          @change="handleImageChange"
           required
           placeholder="Choose image?"
-          class="py-4 px-4 border border-[#008A8A] border-opacity-20 w-[42vw] outline-none rounded-md"
+          class="py-3 px-4 border border-[#008A8A] border-opacity-20 w-full md:w-[42vw] outline-none rounded-md"
         />
+        <!-- Image preview -->
+        <div v-if="imagePreviewUrl" class="mt-3">
+          <img :src="imagePreviewUrl" alt="Image preview" class=" object-cover rounded-md" />
+        </div>
       </div>
       <div>
         <textarea
           id="description"
           v-model="productData.description"
           required
-          class="w-[42vw] h-[20vh] border border-[#008a8a] border-opacity-20 outline-none px-4 py-4"
+          class="w-full md:w-[42vw] h-[15vh] border border-[#008a8a] border-opacity-20 outline-none px-4 py-3"
           placeholder="Description ..."
         ></textarea>
       </div>
@@ -180,9 +201,9 @@ const categories = ref([]);
           id="category"
           v-model="productData.category"
           required
-          class="py-4 px-4 border border-[#008A8A] border-opacity-20 w-[42vw] outline-none rounded-md"
+          class="py-3 px-4 border border-[#008A8A] border-opacity-20 w-full md:w-[42vw] outline-none rounded-md"
         >
-          <option value="" disabled>Select a category</option>
+          <option value="" disabled >Select a category</option>
           <option v-for="category in categories" :key="category.id" :value="category.name">
             {{ category.name }}
           </option>
@@ -190,7 +211,7 @@ const categories = ref([]);
       </div>
       <button
         type="submit"
-        class="py-4 px-6 border border-[#008a8a] font-medium border-opacity-20 rounded-md w-fit text-[#008a8a]"
+        class="py-3 px-6 border border-[#008a8a] font-medium border-opacity-20 rounded-md w-fit text-[#008a8a]"
       >
         Create Product
       </button>
