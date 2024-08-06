@@ -19,31 +19,8 @@ const dropdownVisible = ref(null);
 const expandedPostId = ref(null);
 
 const isAuthenticated = () => !!store.state.activeUser;
+console.log(store.state.activeUser)
 
-const toggleLike = (postId) => {
-  if (!isAuthenticated()) {
-    showLoginModal.value = true;
-    return;
-  }
-
-  const index = liked.value.indexOf(postId);
-  if (index === -1) {
-    liked.value.push(postId);
-    updateLikeCount(postId, true);
-    sendLike(postId, true);
-  } else {
-    liked.value.splice(index, 1);
-    updateLikeCount(postId, false);
-    sendLike(postId, false);
-  }
-};
-
-const updateLikeCount = (postId, liked) => {
-  const post = posts.value.find((p) => p.id === postId);
-  if (post) {
-    post.count_like += liked ? 1 : -1;
-  }
-};
 
 const sendLike = (postId, liked) => {
   if (!postId || !store.state.activeUser) {
@@ -63,6 +40,22 @@ const sendLike = (postId, liked) => {
     console.error("Error sending like:", error);
   }
 };
+
+
+
+
+
+const handleCommentUpdate = (comment) => {
+  const post = posts.value.find((p) => p.id === comment.post_id);
+  if (post) {
+    if (!post.comments) {
+      post.comments = [];
+    }
+    post.comments.push(comment);
+    post.count_comment += 1;
+  }
+};
+
 
 const addComment = (postId, content) => {
   if (!postId || !store.state.activeUser) {
@@ -103,28 +96,32 @@ const connectActionWebSocket = () => {
   actionWebSocket.value.onclose = onWebSocketClose;
 };
 
-const handleLikeUpdate = (likeUpdate) => {
-  const { post_id, liked } = likeUpdate;
-  const post = posts.value.find((p) => p.id === post_id);
+const updateLikeCount = (postId, liked) => {
+  const post = posts.value.find((p) => p.id === postId);
   if (post) {
-    if (liked) {
-      post.count_like += 1;
-    } else {
-      post.count_like -= 1;
-    }
+    console.log(`Updating like count for post ${postId}: ${post.count_like} -> ${post.count_like + (liked ? 1 : -1)}`);
+    post.count_like += liked ? 1 : -1;
   }
 };
 
-const handleCommentUpdate = (comment) => {
-  const post = posts.value.find((p) => p.id === comment.post_id);
-  if (post) {
-    if (!post.comments) {
-      post.comments = [];
-    }
-    post.comments.push(comment);
-    post.count_comment += 1;
+const toggleLike = (postId) => {
+  if (!isAuthenticated()) {
+    showLoginModal.value = true;
+    return;
+  }
+
+  const index = liked.value.indexOf(postId);
+  if (index === -1) {
+    liked.value.push(postId);
+    updateLikeCount(postId, true);
+    sendLike(postId, true);
+  } else {
+    liked.value.splice(index, 1);
+    updateLikeCount(postId, false);
+    sendLike(postId, false);
   }
 };
+
 
 const showCommentBox = (postId) => {
   if (!isAuthenticated()) {
@@ -189,8 +186,6 @@ const onActionWebSocketMessage = (event) => {
       console.error(`WebSocket error: ${data.error}`);
     } else if (data.type === "comment") {
       handleCommentUpdate(data.comment);
-    } else if (data.type === "like") {
-      handleLikeUpdate(data.like);
     } else if (data.type === "comments") {
       updatePostComments(data.post_id, data.comments);
     } else {

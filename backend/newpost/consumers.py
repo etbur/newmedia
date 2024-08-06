@@ -174,14 +174,11 @@ class PostFetchConsumer(WebsocketConsumer):
         }
 
 
+
 class PostLikeComment(AsyncWebsocketConsumer):
     async def connect(self):
-        self.user = self.scope["user"]
-        # Restrict access to authenticated users only
-        if not self.user.is_authenticated:
-            await self.close()
-            return
-
+        logger.info(f"Client {self.channel_name} connected.")
+        # Allow all users to connect
         await self.channel_layer.group_add(
             "post_group",
             self.channel_name
@@ -189,6 +186,7 @@ class PostLikeComment(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
+        logger.info(f"Client {self.channel_name} disconnected.")
         await self.channel_layer.group_discard(
             "post_group",
             self.channel_name
@@ -238,20 +236,13 @@ class PostLikeComment(AsyncWebsocketConsumer):
             return
 
         try:
-            user = self.user
-            if user.is_authenticated:
-                user = await database_sync_to_async(get_user_model().objects.get)(id=user.id)
-            else:
-                await self.send_error("User must be authenticated to comment.")
-                return
-
+            user = await database_sync_to_async(get_user_model().objects.get)(username=username)
             post = await database_sync_to_async(Post.objects.get)(id=post_id)
             comment = await database_sync_to_async(Comment.objects.create)(
                 post=post,
                 user=user,
                 content=content,
             )
-            # Increment the comment count for the post
             post.count_comment += 1
             await database_sync_to_async(post.save)()
 
@@ -268,11 +259,11 @@ class PostLikeComment(AsyncWebsocketConsumer):
                 }
             )
         except ObjectDoesNotExist:
-            await self.send_error("Post does not exist.")
+            await self.send_error("Post or user does not exist.")
         except Exception as e:
             await self.send_error(f"An error occurred while handling comment: {str(e)}")
-    @database_sync_to_async
-    def fetch_comments(self, post_id):
+
+    async def fetch_comments(self, post_id):
         try:
             comments = Comment.objects.filter(post_id=post_id)
             comments_data = [
@@ -283,15 +274,14 @@ class PostLikeComment(AsyncWebsocketConsumer):
                 }
                 for comment in comments
             ]
-            self.send(text_data=json.dumps({
+            await self.send(text_data=json.dumps({
                 "type": "comments",
                 "post_id": post_id,
                 "comments": comments_data
             }))
         except Exception as e:
-            self.send_error(f"An error occurred while fetching comments: {str(e)}")
+            await self.send_error(f"An error occurred while fetching comments: {str(e)}")
     
-
     async def send_like(self, event):
         await self.send(text_data=json.dumps({
             "type": "like",
@@ -309,5 +299,3 @@ class PostLikeComment(AsyncWebsocketConsumer):
             "type": "error",
             "error": error_message
         }))
-
-

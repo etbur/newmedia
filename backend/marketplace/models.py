@@ -3,12 +3,12 @@ from django.contrib.auth.models import User
 
 class Products(models.Model):
     CATEGORY_CHOICES = [
-        ('electronics', 'Electronics'),
-        ('fashion', 'Fashion'),
-        ('home', 'Home'),
-        ('beauty', 'Beauty'),
-        ('sports', 'Sports'),
-        ('other', 'Other'),
+        ('electronics', 'electronics'),
+        ('fashion', 'fashion'),
+        ('home', 'home'),
+        ('beauty', 'beauty'),
+        ('sports', 'sports'),
+        ('other', 'other'),
     ]
 
     name = models.CharField(max_length=255)

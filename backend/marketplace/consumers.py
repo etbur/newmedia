@@ -7,7 +7,9 @@ from .models import Products
 from .serializers import ProductSerializer
 from django.core.files.base import ContentFile
 import base64
-
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 class ProductCreateConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -81,44 +83,7 @@ class ProductCreateConsumer(AsyncWebsocketConsumer):
                 'action': 'create_product_error',
                 'error': str(e)
             }))
-
-
-class ProductCategory(AsyncWebsocketConsumer):
-    async def connect(self):
-        await self.accept()
-    async def disconnect(self, close_code):
-        pass
-
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        action = text_data_json.get('action')
-
-        if action == 'fetch_categories':
-            await self.fetch_categories()
-        else:
-            await self.send(text_data=json.dumps({
-                'action': 'error',
-                'error': 'Invalid action'
-            }))
-
-    async def fetch_categories(self):
-        try:
-            categories = Products.CATEGORY_CHOICES
-            category_list = [
-                {'id': index, 'name': name}
-                for index, (value, name) in enumerate(categories)
-            ]
-
-            await self.send(text_data=json.dumps({
-                'action': 'fetch_categories_success',
-                'categories': category_list
-            }))
-        except Exception as e:
-            await self.send(text_data=json.dumps({
-                'action': 'fetch_categories_error',
-                'error': str(e)
-            }))
-
+            
 
 class ProductListConsumer(WebsocketConsumer):
     def connect(self):
@@ -133,6 +98,9 @@ class ProductListConsumer(WebsocketConsumer):
 
         if action == 'fetch_all_products':
             self.fetch_all_products()
+        elif action == 'filter_by_category':
+            category = text_data_json.get('category')
+            self.filter_by_category(category)
         else:
             self.send(text_data=json.dumps({
                 'action': 'error',
@@ -144,7 +112,6 @@ class ProductListConsumer(WebsocketConsumer):
             products = Products.objects.all().order_by('-created_at')
             serializer = ProductSerializer(products, many=True)
             product_list = serializer.data
-
             self.send(text_data=json.dumps({
                 'action': 'fetch_all_products_success',
                 'products': product_list
@@ -154,6 +121,70 @@ class ProductListConsumer(WebsocketConsumer):
                 'action': 'fetch_all_products_error',
                 'error': str(e)
             }))
+            logger.error("Error fetching all products: %s", str(e))
+
+    def filter_by_category(self, category):
+        try:
+            # Ensure that the category exists in the choices
+            valid_categories = [c[0] for c in Products.CATEGORY_CHOICES]
+            if category not in valid_categories:
+                self.send(text_data=json.dumps({
+                    'action': 'filter_by_category_error',
+                    'error': 'Invalid category'
+                }))
+                return
+
+            products = Products.objects.filter(category=category)
+            serializer = ProductSerializer(products, many=True)
+            product_list = serializer.data
+            self.send(text_data=json.dumps({
+                'action': 'filter_by_category_success',
+                'products': product_list
+            }))
+        except Exception as e:
+            self.send(text_data=json.dumps({
+                'action': 'filter_by_category_error',
+                'error': str(e)
+            }))
+            logger.error("Error filtering products by category %s: %s", category, str(e))
+
+
+class ProductCategory(WebsocketConsumer):
+    def connect(self):
+        self.accept()
+
+    def disconnect(self, close_code):
+        pass
+
+    def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        action = text_data_json.get('action')
+
+        if action == 'fetch_categories':
+            self.fetch_categories()
+        else:
+            self.send(text_data=json.dumps({
+                'action': 'error',
+                'error': 'Invalid action'
+            }))
+
+    def fetch_categories(self):
+        try:
+            categories = Products.CATEGORY_CHOICES
+            category_list = [
+                {'id': index, 'name': name}
+                for index, (value, name) in enumerate(categories)
+            ]
+            self.send(text_data=json.dumps({
+                'action': 'fetch_categories_success',
+                'categories': category_list
+            }))
+        except Exception as e:
+            self.send(text_data=json.dumps({
+                'action': 'fetch_categories_error',
+                'error': str(e)
+            }))
+            logger.error("Error fetching categories: %s", str(e))
 
 
 class ProductUpdateConsumer(AsyncWebsocketConsumer):
