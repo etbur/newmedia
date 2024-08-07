@@ -188,6 +188,15 @@ const onActionWebSocketMessage = (event) => {
       handleCommentUpdate(data.comment);
     } else if (data.type === "comments") {
       updatePostComments(data.post_id, data.comments);
+    } else if (data.action === "edit") {
+      const updatedPost = data.post;
+      const index = posts.value.findIndex((p) => p.id === updatedPost.id);
+      if (index !== -1) {
+        posts.value[index] = updatedPost;
+      }
+    } else if (data.action === "delete") {
+      const postId = data.post_id;
+      posts.value = posts.value.filter((post) => post.id !== postId);
     } else {
       console.warn("Unknown WebSocket message type:", data);
     }
@@ -195,6 +204,7 @@ const onActionWebSocketMessage = (event) => {
     console.error("Error handling WebSocket message:", error);
   }
 };
+
 
 const updatePostComments = (postId, comments) => {
   const post = posts.value.find((p) => p.id === postId);
@@ -287,6 +297,52 @@ const closePost = (postId) => {
   posts.value = posts.value.filter((post) => post.id !== postId);
 };
 
+const toggleDropdown = (postId) => {
+  dropdownVisible.value = dropdownVisible.value === postId ? null : postId;
+};
+
+const editPost = (postId) => {
+  const newTitle = prompt("Enter new title:");
+  const newDescription = prompt("Enter new description:");
+
+  if (!newTitle || !newDescription) {
+    console.error("Title or description cannot be empty");
+    return;
+  }
+
+  try {
+    actionWebSocket.value.send(
+      JSON.stringify({
+        action: "edit",
+        post_id: postId,
+        new_data: {
+          title: newTitle,
+          description: newDescription
+        }
+      })
+    );
+  } catch (error) {
+    console.error("Error sending edit request:", error);
+  }
+};
+
+const deletePost = (postId) => {
+  if (confirm("Are you sure you want to delete this post?")) {
+    try {
+      actionWebSocket.value.send(
+        JSON.stringify({
+          action: "delete",
+          post_id: postId
+        })
+      );
+    } catch (error) {
+      console.error("Error sending delete request:", error);
+    }
+  }
+};
+
+
+
 onMounted(() => {
   connectFetchWebSocket();
   connectActionWebSocket();
@@ -343,7 +399,7 @@ onUnmounted(() => {
                 />
                 <div
                   v-if="dropdownVisible === post.id"
-                  class="absolute -right-44 mt-3 w-48 bg-gray-50 border border-gray-300 rounded-md shadow-lg"
+                  class="absolute -right-44 mt-3 w-48 bg-gray-50 border border-gray-300 rounded-md shadow-lg z-30"
                 >
                   <ul>
                     <li
@@ -363,9 +419,23 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
-          <h2 class="text-lg font-medium text-[#C59728] capitalize mb-2">
+          <h2 class="text-lg font-medium text-[#C59728] capitalize mt-1">
             {{ post.title }}
           </h2>
+          <p class="text-gray-800 mb-4 mt-1">
+            {{
+              post.description.length > 100 && !isDescriptionExpanded(post.id)
+                ? post.description.substring(0, 100) + "..."
+                : post.description
+            }}
+            <button
+              v-if="post.description.length > 100"
+              @click="toggleDescription(post.id)"
+              class="text-[#C59728] underline"
+            >
+              {{ isDescriptionExpanded(post.id) ? "Show less" : "Show more" }}
+            </button>
+          </p>
           <img
             v-if="
               post.media &&
@@ -396,22 +466,9 @@ onUnmounted(() => {
           >
             <Icon icon="mdi:file" class="w-12 h-12" />
           </div>
-          <p class="text-gray-800 my-2">
-            {{
-              post.description.length > 100 && !isDescriptionExpanded(post.id)
-                ? post.description.substring(0, 100) + "..."
-                : post.description
-            }}
-            <button
-              v-if="post.description.length > 100"
-              @click="toggleDescription(post.id)"
-              class="text-[#C59728] underline"
-            >
-              {{ isDescriptionExpanded(post.id) ? "Show less" : "Show more" }}
-            </button>
-          </p>
+          
           <div
-            class="flex flex-wrap justify-between items-center text-gray-500 mb-6 px-6 rounded-md"
+            class="flex flex-wrap justify-between items-center text-gray-500 my-4 px-6 rounded-md"
           >
             <button
               @click="toggleLike(post.id)"

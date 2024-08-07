@@ -7,7 +7,7 @@ const showSidebar = ref(false);
 
 <template>
   <header class="sm:flex flex-col fixed top-0 w-full z-10 mb-10 sm:mb-0">
-    <div class="flex flex-col py-2 sm:py-4 bg-[#008A8A]">
+    <div class="flex flex-col py-2 sm:py-4 lg:py-0 bg-[#008A8A]">
       <div
         class="flex justify-between px-[6vw] md:py-0 items-center bg-[#008A8A]"
       >
@@ -44,7 +44,7 @@ const showSidebar = ref(false);
 
     <!-- Main Navigation -->
     <nav
-      class="flex flex-col gap-5 sm:flex-row sm:gap-10  bg-[#F1F1F1] justify-between items-center px-[7vw] shadow-md"
+      class="flex flex-col gap-5 sm:flex-row sm:gap-10  bg-[#F1F1F1] justify-between items-center px-[7vw] shadow-md py-2"
     >
       <div class="flex gap-6 sm:gap-11">
         <RouterLink to="/app/friends" >

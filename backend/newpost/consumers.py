@@ -116,6 +116,63 @@ class PostCreateConsumer(AsyncWebsocketConsumer):
             'username':post.username,
             "profile_picture":post.profile_picture,
         }
+# class PostFetchConsumer(WebsocketConsumer):
+#     def connect(self):
+#         self.group_name = 'posts'
+#         self.channel_layer.group_add(
+#             self.group_name,
+#             self.channel_name
+#         )
+#         self.accept()
+
+#     def disconnect(self, close_code):
+#         self.channel_layer.group_discard(
+#             self.group_name,
+#             self.channel_name
+#         )
+
+#     def receive(self, text_data):
+#         data = json.loads(text_data)
+#         action = data.get('action')
+
+#         if action == 'fetch':
+#             try:
+#                 posts = self.fetch_posts()
+#                 posts_data = [self.serialize_post(post) for post in posts]
+#                 self.send(text_data=json.dumps({
+#                     'action': 'fetch',
+#                     'posts': posts_data
+#                 }))
+#             except Exception as e:
+#                 logger.error(f"Error fetching posts: {e}")
+#                 self.send(text_data=json.dumps({'error': 'An error occurred while fetching posts'}))
+#         else:
+#             self.send(text_data=json.dumps({'error': 'Invalid action'}))
+
+#     def fetch_posts(self):
+#         return Post.objects.all().order_by('-created_at')
+
+#     def serialize_post(self, post):
+#         # Assuming 'Profile' is the model storing additional user details
+#         user_profile = Profile.objects.filter(user=post.user).first()
+#         profile_picture_url = user_profile.photo.url if user_profile and user_profile.photo else None
+        
+#         return {
+#             'id': post.pk,
+#             'title': post.title,
+#             'description': post.description,
+#             'media': post.media.url if post.media else None,
+#             'location': post.location,
+#             'audience': post.audience,
+#             'created_at': post.created_at.isoformat(),
+#             'updated_at': post.updated_at.isoformat(),
+#             'tags': list(post.tags.values_list('name', flat=True)),
+#             'count_like': post.count_like,
+#             'count_comment': post.count_comment,
+#             'username':post.username,
+#             "profile_picture":post.profile_picture,
+#         }
+
 class PostFetchConsumer(WebsocketConsumer):
     def connect(self):
         self.group_name = 'posts'
@@ -136,24 +193,52 @@ class PostFetchConsumer(WebsocketConsumer):
         action = data.get('action')
 
         if action == 'fetch':
-            try:
-                posts = self.fetch_posts()
-                posts_data = [self.serialize_post(post) for post in posts]
-                self.send(text_data=json.dumps({
-                    'action': 'fetch',
-                    'posts': posts_data
-                }))
-            except Exception as e:
-                logger.error(f"Error fetching posts: {e}")
-                self.send(text_data=json.dumps({'error': 'An error occurred while fetching posts'}))
+            self.fetch_posts()
+        elif action == 'edit':
+            self.edit_post(data.get('post_id'), data.get('new_data'))
+        elif action == 'delete':
+            self.delete_post(data.get('post_id'))
         else:
             self.send(text_data=json.dumps({'error': 'Invalid action'}))
 
     def fetch_posts(self):
-        return Post.objects.all().order_by('-created_at')
+        posts = Post.objects.all().order_by('-created_at')
+        posts_data = [self.serialize_post(post) for post in posts]
+        self.send(text_data=json.dumps({
+            'action': 'fetch',
+            'posts': posts_data
+        }))
+
+    def edit_post(self, post_id, new_data):
+        try:
+            post = Post.objects.get(id=post_id)
+            # Ensure the user is authorized to edit the post
+            if self.scope['user'] != post.user:
+                self.send(text_data=json.dumps({'error': 'Unauthorized'}))
+                return
+
+            for key, value in new_data.items():
+                setattr(post, key, value)
+            post.save()
+
+            self.send(text_data=json.dumps({'action': 'edit', 'post': self.serialize_post(post)}))
+        except Post.DoesNotExist:
+            self.send(text_data=json.dumps({'error': 'Post not found'}))
+
+    def delete_post(self, post_id):
+        try:
+            post = Post.objects.get(id=post_id)
+            # Ensure the user is authorized to delete the post
+            if self.scope['user'] != post.user:
+                self.send(text_data=json.dumps({'error': 'Unauthorized'}))
+                return
+
+            post.delete()
+            self.send(text_data=json.dumps({'action': 'delete', 'post_id': post_id}))
+        except Post.DoesNotExist:
+            self.send(text_data=json.dumps({'error': 'Post not found'}))
 
     def serialize_post(self, post):
-        # Assuming 'Profile' is the model storing additional user details
         user_profile = Profile.objects.filter(user=post.user).first()
         profile_picture_url = user_profile.photo.url if user_profile and user_profile.photo else None
         
@@ -169,10 +254,9 @@ class PostFetchConsumer(WebsocketConsumer):
             'tags': list(post.tags.values_list('name', flat=True)),
             'count_like': post.count_like,
             'count_comment': post.count_comment,
-            'username':post.username,
-            "profile_picture":post.profile_picture,
+            'username': post.username,
+            'profile_picture': profile_picture_url,
         }
-
 
 
 class PostLikeComment(AsyncWebsocketConsumer):

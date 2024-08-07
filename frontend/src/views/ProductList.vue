@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import avatar from '../assets/avatar.png';
+import ProductDetailModal from './ProductDetailModal.vue'
 
 const products = ref([]);
 const categories = ref([]);
@@ -12,7 +13,8 @@ const dropdowns = ref({
 });
 
 const selectedCategory = ref(null);
-
+const selectedProduct = ref(null); 
+const showModal = ref(false);
 const router = useRouter();
 
 const toggleDropdown = (dropdown) => {
@@ -107,6 +109,22 @@ const updateViewCount = (productId) => {
   };
 };
 
+
+const openModal = (product) => {
+  selectedProduct.value = product;
+  showModal.value = true;
+};
+
+const closeModal = () => {
+  showModal.value = false;
+};
+
+const loadMoreProducts = () => {
+  if (hasMoreProducts.value) {
+    currentPage.value += 1;  // Increment page number
+    fetchProducts();  // Fetch next page of products
+  }
+};
 onMounted(() => {
   connectProductWebSocket();
   connectCategoryWebSocket();
@@ -144,7 +162,7 @@ const filterByPrice = () => {
 
 <template>
   <div class="md:mx-[2vw]">
-    <div class="flex flex-wrap ml-[8vw] md:mx-0 md:justify-end gap-6 mb-3">
+    <div class="flex flex-wrap ml-[8vw] md:mx-0 md:justify-end gap-6 mb-3 ">
       <!-- Dropdowns for actions -->
       <div class="relative inline-block text-left">
         <div>
@@ -322,12 +340,12 @@ const filterByPrice = () => {
             <p class="text-gray-900">{{ product.price }} Br</p>
             <div class="flex gap-3 items-center justify-end">
               <p class="text-gray-600">Rating: {{ product.rating }}</p>
-              <p class="text-[#00b4b4] flex gap-2">
+              <router-link class="text-[#00b4b4] px-4 py-2 rounded-md flex gap-2" @click.prevent="updateViewCount(product.id)">
                 {{ product.views }}<span>Views</span>
-              </p>
-              <router-link class="text-[#00b4b4] px-4 py-2 rounded-md" @click.prevent="updateViewCount(product.id)">
-                Detail
               </router-link>
+              <button class="text-[#00b4b4] px-4 py-2 rounded-md" @click="openModal(product)">
+                Detail
+              </button>
             </div>
           </div>
         </div>
@@ -336,6 +354,18 @@ const filterByPrice = () => {
     <div v-else class="text-center mt-16 text-gray-500">
       No products available.
     </div>
+  
+    <!-- Product Detail Modal -->
+    <ProductDetailModal :isOpen="showModal" :product="selectedProduct" @close="closeModal" />
   </div>
+  <div class="flex justify-center">
+    <button class="border border-gray-200 px-4 py-1 text-[#008a8a]">
+      Load More...
+    </button>
+    <button class="border border-gray-200 px-4 py-1 text-[#008a8a]">
+      Show Less
+    </button>
+  </div>
+  
 </template>
 
