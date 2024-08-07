@@ -358,14 +358,7 @@ const filterByPrice = () => {
     <!-- Product Detail Modal -->
     <ProductDetailModal :isOpen="showModal" :product="selectedProduct" @close="closeModal" />
   </div>
-  <div class="flex justify-center">
-    <button class="border border-gray-200 px-4 py-1 text-[#008a8a]">
-      Load More...
-    </button>
-    <button class="border border-gray-200 px-4 py-1 text-[#008a8a]">
-      Show Less
-    </button>
-  </div>
+
   
 </template>
 
