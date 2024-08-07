@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import avatar from '../assets/avatar.png';
-import ProductDetailModal from './ProductDetailModal.vue'
+import ProductDetailModal from '../components/ProductDetailModal.vue'
 
 const products = ref([]);
 const categories = ref([]);
@@ -119,12 +119,6 @@ const closeModal = () => {
   showModal.value = false;
 };
 
-const loadMoreProducts = () => {
-  if (hasMoreProducts.value) {
-    currentPage.value += 1;  // Increment page number
-    fetchProducts();  // Fetch next page of products
-  }
-};
 onMounted(() => {
   connectProductWebSocket();
   connectCategoryWebSocket();

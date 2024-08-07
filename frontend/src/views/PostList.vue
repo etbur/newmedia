@@ -218,6 +218,7 @@ const updatePostComments = (postId, comments) => {
 const onWebSocketError = (error) => {
   console.error("WebSocket error:", error);
 };
+
 const downloadMedia = (post) => {
   const mediaUrl = `http://localhost:8000${post.media}`;
   const link = document.createElement('a');
@@ -391,7 +392,8 @@ onUnmounted(() => {
             </div>
             <div>
               <!-- More Options Dropdown -->
-              <div class="relative">
+              <div class="relative flex gap-2">
+                {{ post.formatted_created_at }}
                 <Icon
                   icon="mdi:dots-vertical"
                   class="text-gray-800 hover:text-[#C59728] cursor-pointer text-sm w-10 h-5 sm:text-base"
