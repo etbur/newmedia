@@ -369,10 +369,10 @@ onUnmounted(() => {
         v-for="post in formattedPosts"
         :key="post.id"
       >
-        <div class="flex justify-end relative -right-3 mt-3 mb-2">
+        <div class="flex justify-end relative right-3 pt-5 mb-2">
           <Icon
             icon="mdi:close"
-            class="text-gray-800 w-5 h-5 hover:text-red-500 cursor-pointer"
+            class="text-gray-800 w-5 h-5 hover:text-red-600 cursor-pointer"
             @click="closePost(post.id)"
           />
         </div>
@@ -468,7 +468,7 @@ onUnmounted(() => {
           </div>
           
           <div
-            class="flex flex-wrap justify-between items-center text-gray-500 my-4 px-6 rounded-md"
+            class="bg-white  py-2 flex flex-wrap  gap-[4vw] items-center text-gray-500 my-4 px-6 rounded-md"
           >
             <button
               @click="toggleLike(post.id)"
