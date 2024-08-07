@@ -360,12 +360,12 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="flex flex-col lg:flex-row items-center md:items-start justify-evenly gap-[5vw] md:mx-[3vw]"
+    class="flex flex-col lg:flex-row items-center md:items-start justify-evenly gap-[5vw] md:mx-[3vw] "
   >
     <!-- Posts Section -->
-    <div class="grid grid-col-2 sm:grid-cols-1 gap-8">
+    <div class="grid grid-col-2 sm:grid-cols-1 gap-8 bg-[#f4f4f4] py-6">
       <div
-        class="bg-[#f4f4f4] grid grid-cols-1 mx-10 px-6 shadow-md w-full sm:w-[35vw]"
+        class="bg-[#ffffff] grid grid-cols-1 mx-8 px-6 shadow-sm w-full sm:w-[35vw]"
         v-for="post in formattedPosts"
         :key="post.id"
       >
@@ -468,7 +468,7 @@ onUnmounted(() => {
           </div>
           
           <div
-            class="bg-white  py-2 flex flex-wrap  gap-[4vw] items-center text-gray-500 my-4 px-6 rounded-md"
+            class=" py-2 flex flex-wrap  gap-[4vw] items-center text-gray-500 my-4 px-6 rounded-md"
           >
             <button
               @click="toggleLike(post.id)"
