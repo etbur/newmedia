@@ -22,11 +22,14 @@
         </svg>
       </button>
       <div class="bg-[#f4f4f4] px-8 py-1 rounded-sm">
-        <img
-          :src="`http://localhost:8000${product.image}`"
-          alt="Product Image"
-          class="w-full h-48 object-cover mb-4"
-        />
+        <div>
+          <img
+            :src="`http://localhost:8000${product.image}`"
+            alt="Product Image"
+            class="w-full h-auto object-cover mb-4"
+          />
+        </div>
+
         <router-link class="text-[#008a8a] flex justify-end text-sm"
           >Review</router-link
         >
@@ -38,16 +41,18 @@
             v-bind:alt="alt"
             class="w-6 h-6"
           />
-          <p class="text-sm mb-2 text-[#008a8a]">
-           {{ product.seller_profile_name }}
+          <p class="text-sm mb-2 text-[#008a8a] capitalize">
+            {{ product.seller_profile_name }}
           </p>
         </div>
         <h2 class="text-xl font-semibold mb-4 capitalize">
           {{ product.name }}
         </h2>
+        <div></div>
         <p class="text-gray-800 mb-4 mt-1">
           {{
-            product.description.length > 100 && !isDescriptionExpanded(product.id)
+            product.description.length > 100 &&
+            !isDescriptionExpanded(product.id)
               ? product.description.substring(0, 100) + "..."
               : product.description
           }}
@@ -65,7 +70,7 @@
           <p class="text-sm mb-4">Views: {{ product.views }}</p>
         </div>
         <router-link
-          to="/app/buyproduct"
+          to="/app/addtocart"
           class="bg-[#008a8a] px-4 py-2 rounded-md text-white text-sm"
         >
           Buy Now
@@ -76,8 +81,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import avatar from '../assets/avatar.png';
+import { ref } from "vue";
+import avatar from "../assets/avatar.png";
 
 const expandedProductId = ref(null);
 
@@ -93,7 +98,8 @@ const close = () => {
 };
 
 const toggleDescription = (productId) => {
-  expandedProductId.value = expandedProductId.value === productId ? null : productId;
+  expandedProductId.value =
+    expandedProductId.value === productId ? null : productId;
 };
 
 const isDescriptionExpanded = (productId) => {

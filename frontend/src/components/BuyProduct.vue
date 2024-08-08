@@ -58,9 +58,9 @@ onUnmounted(() => {
           <p class="text-gray-900">{{ product.description }}</p>
           <div class="flex gap-3 items-center justify-between">
             <p class="text-gray-900">{{ product.price }} Br</p>
-            <button class="text-white bg-[#008a8a] px-4 py-1 rounded-md">
+            <router-link class="text-white bg-[#008a8a] px-4 py-1 rounded-md">
               Buy Now
-            </button>
+            </router-link>
           </div>
         </div>
       </div>
