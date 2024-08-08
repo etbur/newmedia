@@ -4,7 +4,7 @@
     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
   >
     <div
-      class="bg-white rounded-lg shadow-lg p-6 w-[40vw] relative flex gap-[25%] px-[5%]"
+      class="bg-white rounded-lg shadow-lg p-6 w-[40vw] relative flex gap-[25%] px-[2%]"
     >
       <button @click="close" class="absolute top-2 right-2">
         <svg
@@ -42,17 +42,30 @@
            {{ product.seller_profile_name }}
           </p>
         </div>
-        <h2 class="text-xl font-semibold mb-4  capitalize">
+        <h2 class="text-xl font-semibold mb-4 capitalize">
           {{ product.name }}
         </h2>
-        <p class="text-sm">{{ product.description }}</p>
+        <p class="text-gray-800 mb-4 mt-1">
+          {{
+            product.description.length > 100 && !isDescriptionExpanded(product.id)
+              ? product.description.substring(0, 100) + "..."
+              : product.description
+          }}
+          <button
+            v-if="product.description.length > 100"
+            @click="toggleDescription(product.id)"
+            class="text-[#008a8a] underline"
+          >
+            {{ isDescriptionExpanded(product.id) ? "Show less" : "Show more" }}
+          </button>
+        </p>
         <div class="flex gap-6 py-2">
           <p class="text-sm mb-4">Price: {{ product.price }} Br</p>
           <p class="text-sm mb-4">Rating: {{ product.rating }}</p>
           <p class="text-sm mb-4">Views: {{ product.views }}</p>
         </div>
         <router-link
-          to="/app/buynow"
+          to="/app/buyproduct"
           class="bg-[#008a8a] px-4 py-2 rounded-md text-white text-sm"
         >
           Buy Now
@@ -63,7 +76,10 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import avatar from '../assets/avatar.png';
+
+const expandedProductId = ref(null);
 
 const props = defineProps({
   isOpen: Boolean,
@@ -75,8 +91,14 @@ const emit = defineEmits(["close"]);
 const close = () => {
   emit("close");
 };
+
+const toggleDescription = (productId) => {
+  expandedProductId.value = expandedProductId.value === productId ? null : productId;
+};
+
+const isDescriptionExpanded = (productId) => {
+  return expandedProductId.value === productId;
+};
 </script>
 
-<style scoped>
-/* Add your styles here */
-</style>
+
