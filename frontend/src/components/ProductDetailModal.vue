@@ -38,11 +38,11 @@
             v-bind:alt="alt"
             class="w-6 h-6"
           />
-          <p class="text-sm mb-2 ">
+          <p class="text-sm mb-2 text-[#008a8a]">
            {{ product.seller_profile_name }}
           </p>
         </div>
-        <h2 class="text-xl font-semibold mb-4 text-[#008a8a] capitalize">
+        <h2 class="text-xl font-semibold mb-4  capitalize">
           {{ product.name }}
         </h2>
         <p class="text-sm">{{ product.description }}</p>
