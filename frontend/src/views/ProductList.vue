@@ -6,6 +6,7 @@ import ProductDetailModal from '../components/ProductDetailModal.vue'
 
 const products = ref([]);
 const categories = ref([]);
+const alt=ref('seller profile')
 const dropdowns = ref({
   sell: false,
   filter: false,
@@ -136,11 +137,6 @@ onUnmounted(() => {
 const addProduct = () => {
   router.push('/app/newproduct');
 };
-
-const buyProduct = () => {
-  // Implement the logic for buying a product here
-};
-
 const filterByRating = () => {
   // Implement the logic for filtering by rating
 };
@@ -320,7 +316,7 @@ const filterByPrice = () => {
       <div v-for="product in products" :key="product.id" class="bg-[#F4F4F4] flex flex-col gap-3 rounded-md shadow-md p-6">
         <div class="flex flex-col gap-2">
           <div class="flex items-center gap-4">
-            <img :src="avatar" alt="seller profile" class="w-6 h-6" />
+            <img :src="product.seller_profile_picture||avatar" v-bind:alt="alt" class="w-6 h-6" />
             <p class="text-sm capitalize">{{ product.seller_profile_name }}</p>
           </div>
           <p class="text-sm">{{ product.created_at }}</p>

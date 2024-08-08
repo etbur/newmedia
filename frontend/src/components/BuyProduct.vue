@@ -43,7 +43,7 @@ onUnmounted(() => {
   <h1 class="text-[#008a8a] font-medium mb-8">Buy product</h1>
   <!-- Display Product List -->
   <div v-if="products.length > 0" class="flex flex-col gap-10">
-    <div v-for="product in products" :key="product.id" class="border p-6 rounded-md">
+    <div v-for="product in products" :key="product.id" class="border  p-6 rounded-md">
       <div class="flex gap-[20%]">
         <div class="bg-[#f4f4f4] p-8">
            <img
@@ -51,7 +51,6 @@ onUnmounted(() => {
           alt="Product Image"
           class="w-[12vw] h-[12vw] inset-0 rounded-lg text-center"
         />
-        <router-link class="text-[#008a8a] flex justify-end">Review</router-link>
         </div>
        
         <div class="flex flex-col  ">
