@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import avatar from '../assets/avatar.png';
 import ProductDetailModal from '../components/ProductDetailModal.vue'
+import StarRating from '../components/StarRating.vue';
 
 const products = ref([]);
 const categories = ref([]);
@@ -110,6 +111,33 @@ const updateViewCount = (productId) => {
   };
 };
 
+const updateProductRating = (productId, rating) => {
+  const updateRatingWebSocket = new WebSocket(`ws://localhost:8000/ws/products/update/${productId}/`);
+  updateRatingWebSocket.onopen = () => {
+    updateRatingWebSocket.send(JSON.stringify({
+      action: 'update_product_rating',
+      rating: rating
+    }));
+  };
+
+  updateRatingWebSocket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.action === 'update_product_rating_success') {
+      console.log('Product rating updated successfully:', data.rating);
+      // Optionally update the product rating locally
+      const product = products.value.find(p => p.id === productId);
+      if (product) {
+        product.rating = data.rating;
+      }
+    } else if (data.action === 'update_product_rating_error') {
+      console.error('Error updating product rating:', data.error);
+    }
+  };
+
+  updateRatingWebSocket.onclose = () => {
+    console.log('Update Rating WebSocket connection closed');
+  };
+};
 
 const openModal = (product) => {
   selectedProduct.value = product;
@@ -316,7 +344,7 @@ const filterByPrice = () => {
       <div v-for="product in products" :key="product.id" class="bg-[#F4F4F4] flex flex-col gap-3 rounded-md shadow-md p-6">
         <div class="flex flex-col gap-2">
           <div class="flex items-center gap-4">
-            <img :src="product.seller_profile_picture||avatar" v-bind:alt="alt" class="w-6 h-6" />
+            <img :src="product.seller_profile_picture || avatar" v-bind:alt="alt" class="w-6 h-6" />
             <p class="text-sm capitalize">{{ product.seller_profile_name }}</p>
           </div>
           <p class="text-sm">{{ product.created_at }}</p>
@@ -324,11 +352,12 @@ const filterByPrice = () => {
 
         <div class="flex flex-col gap-4">
           <h3 class="font-medium capitalize">{{ product.name }}</h3>
-          <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-[10vw] h-[10vw]  inset-0 rounded-lg text-center" />
+          <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-[10vw] h-[10vw] inset-0 rounded-lg text-center" />
           <div class="flex justify-between items-center">
             <p class="text-gray-900">{{ product.price }} Br</p>
             <div class="flex gap-3 items-center justify-end">
-              <p class="text-gray-600">Rating: {{ product.rating }}</p>
+              <StarRating :rating="product.rating" @rating-changed="updateProductRating(product.id, $event)" />
+
               <router-link class="text-[#00b4b4] px-4 py-2 rounded-md flex gap-2" @click.prevent="updateViewCount(product.id)">
                 {{ product.views }}<span>Views</span>
               </router-link>
@@ -343,6 +372,7 @@ const filterByPrice = () => {
     <div v-else class="text-center mt-16 text-gray-500">
       No products available.
     </div>
+    <
   
     <!-- Product Detail Modal -->
     <ProductDetailModal :isOpen="showModal" :product="selectedProduct" @close="closeModal" />
@@ -350,4 +380,3 @@ const filterByPrice = () => {
 
   
 </template>
-

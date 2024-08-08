@@ -149,86 +149,55 @@ class ProductListConsumer(WebsocketConsumer):
             logger.error("Error filtering products by category %s: %s", category, str(e))
             
 
-class ProductRatingAndViewUpdate(WebsocketConsumer):
-    def connect(self):
-        self.accept()
+class ProductUpdateConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.product_id = self.scope['url_route']['kwargs'].get('product_id')
+        self.room_group_name = f'product_{self.product_id}'
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+        await self.accept()
 
-    def disconnect(self, close_code):
-        pass
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
 
-    def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        action = text_data_json.get('action')
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        action = data.get('action')
 
         if action == 'update_product_view':
-            self.update_product_view(text_data_json)
+            await self.update_product_view()
+
         elif action == 'update_product_rating':
-            self.update_product_rating(text_data_json)
-        else:
-            self.send(text_data=json.dumps({
-                'action': 'error',
-                'error': 'Invalid action'
-            }))
+            rating = data.get('rating')
+            await self.update_product_rating(rating)
 
-    def update_product_view(self, data):
-        product_id = data.get('product_id')
-        try:
-            product = Products.objects.get(id=product_id)
-            product.views += 1
-            product.save()
-            self.send(text_data=json.dumps({
-                'action': 'update_product_view_success',
-                'product_id': product_id,
-                'num_views': product.views
-            }))
-        except Products.DoesNotExist:
-            self.send(text_data=json.dumps({
-                'action': 'update_product_view_error',
-                'error': 'Product not found'
-            }))
-            logger.error("Error updating product view: Product with ID %s does not exist", product_id)
-        except Exception as e:
-            self.send(text_data=json.dumps({
-                'action': 'update_product_view_error',
-                'error': str(e)
-            }))
-            logger.error("Error updating product view: %s", str(e))
+    async def update_product_view(self):
+        # Update the view count in the database
+        product = Products.objects.get(id=self.product_id)
+        product.views += 1
+        product.save()
 
-    def update_product_rating(self, data):
-        product_id = data.get('product_id')
-        new_rating = data.get('rating')
-        try:
-            product = Products.objects.get(id=product_id)
-            # Ensure the rating is within valid range
-            if new_rating < 0 or new_rating > 5:
-                raise ValueError("Rating must be between 0 and 5")
+        await self.send(text_data=json.dumps({
+            'action': 'update_product_view_success',
+            'num_views': product.views
+        }))
 
-            product.rating = new_rating
-            product.save()
-            self.send(text_data=json.dumps({
-                'action': 'update_product_rating_success',
-                'product_id': product_id,
-                'rating': product.rating
-            }))
-        except Products.DoesNotExist:
-            self.send(text_data=json.dumps({
-                'action': 'update_product_rating_error',
-                'error': 'Product not found'
-            }))
-            logger.error("Error updating product rating: Product with ID %s does not exist", product_id)
-        except ValueError as ve:
-            self.send(text_data=json.dumps({
-                'action': 'update_product_rating_error',
-                'error': str(ve)
-            }))
-            logger.error("Error updating product rating: %s", str(ve))
-        except Exception as e:
-            self.send(text_data=json.dumps({
-                'action': 'update_product_rating_error',
-                'error': str(e)
-            }))
-            logger.error("Error updating product rating: %s", str(e))
- 
+    async def update_product_rating(self, rating):
+        # Update the rating in the database
+        product = Products.objects.get(id=self.product_id)
+        product.rating = rating
+        product.save()
+
+        await self.send(text_data=json.dumps({
+            'action': 'update_product_rating_success',
+            'rating': product.rating
+        }))
+
 
 class ProductCategory(WebsocketConsumer):
     def connect(self):
@@ -268,6 +237,47 @@ class ProductCategory(WebsocketConsumer):
             logger.error("Error fetching categories: %s", str(e))
 
 
+# class ProductUpdateConsumer(AsyncWebsocketConsumer):
+#     async def connect(self):
+#         self.product_id = self.scope['url_route']['kwargs'].get('product_id')
+#         if not self.product_id:
+#             await self.close()
+#             return
+        
+#         await self.accept()
+
+#     async def disconnect(self, close_code):
+#         pass
+
+#     async def receive(self, text_data):
+#         text_data_json = json.loads(text_data)
+#         action = text_data_json.get('action')
+
+#         if action == 'update_product_view':
+#             await self.update_product_view()
+#         else:
+#             await self.send(text_data=json.dumps({
+#                 'action': 'error',
+#                 'error': 'Invalid action'
+#             }))
+
+#     async def update_product_view(self):
+#         try:
+#             product = await Products.objects.aget(id=self.product_id)
+#             product.num_views += 1
+#             await database_sync_to_async(product.save)()
+
+#             await self.send(text_data=json.dumps({
+#                 'action': 'update_product_view_success',
+#                 'num_views': product.num_views
+#             }))
+#         except Products.DoesNotExist:
+#             await self.send(text_data=json.dumps({
+#                 'action': 'update_product_view_error',
+#                 'error': 'Product does not exist'
+#             }))
+
+
 class ProductUpdateConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.product_id = self.scope['url_route']['kwargs'].get('product_id')
@@ -286,6 +296,15 @@ class ProductUpdateConsumer(AsyncWebsocketConsumer):
 
         if action == 'update_product_view':
             await self.update_product_view()
+        elif action == 'update_product_rating':
+            rating = text_data_json.get('rating')
+            if rating is not None:
+                await self.update_product_rating(rating)
+            else:
+                await self.send(text_data=json.dumps({
+                    'action': 'error',
+                    'error': 'Rating value is missing'
+                }))
         else:
             await self.send(text_data=json.dumps({
                 'action': 'error',
@@ -308,6 +327,21 @@ class ProductUpdateConsumer(AsyncWebsocketConsumer):
                 'error': 'Product does not exist'
             }))
 
+    async def update_product_rating(self, rating):
+        try:
+            product = await Products.objects.aget(id=self.product_id)
+            product.rating = rating
+            await database_sync_to_async(product.save)()
+
+            await self.send(text_data=json.dumps({
+                'action': 'update_product_rating_success',
+                'rating': product.rating
+            }))
+        except Products.DoesNotExist:
+            await self.send(text_data=json.dumps({
+                'action': 'update_product_rating_error',
+                'error': 'Product does not exist'
+            }))
 
 
 
