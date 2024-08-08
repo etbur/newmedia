@@ -111,6 +111,8 @@ const updateViewCount = (productId) => {
   };
 };
 
+
+
 const updateProductRating = (productId, rating) => {
   const updateRatingWebSocket = new WebSocket(`ws://localhost:8000/ws/products/update/${productId}/`);
   updateRatingWebSocket.onopen = () => {
@@ -138,7 +140,6 @@ const updateProductRating = (productId, rating) => {
     console.log('Update Rating WebSocket connection closed');
   };
 };
-
 const openModal = (product) => {
   selectedProduct.value = product;
   showModal.value = true;
@@ -379,3 +380,4 @@ const filterByPrice = () => {
   </div>
   
 </template>
+

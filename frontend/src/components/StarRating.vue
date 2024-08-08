@@ -37,6 +37,6 @@ const setRating = (star) => {
   margin-right: 2px;
 }
 .filled {
-  fill: #01abab;
+  fill: gold;
 }
 </style>
