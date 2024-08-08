@@ -377,6 +377,5 @@ const filterByPrice = () => {
     <!-- Product Detail Modal -->
     <ProductDetailModal :isOpen="showModal" :product="selectedProduct" @close="closeModal" />
   </div>
-
   
 </template>
