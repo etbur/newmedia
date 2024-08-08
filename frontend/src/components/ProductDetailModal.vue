@@ -10,7 +10,7 @@
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
-      <h2 class="text-xl font-semibold mb-4 text-[#008a8a]">{{ product.name }}</h2>
+      <h2 class="text-xl font-semibold mb-4 text-[#008a8a] capitalize">{{ product.name }}</h2>
       <img
         :src="`http://localhost:8000${product.image}`"
         alt="Product Image"
@@ -23,13 +23,14 @@
         <p class="text-sm mb-4">Rating: {{ product.rating }}</p>
         <p class="text-sm mb-4">Views: {{ product.views }}</p>
       </div>
+      <router-link to="/app/buynow" class="bg-[#008a8a] px-4 py-2 rounded-md text-white ">
+       Buy Now
+      </router-link>
     </div>
   </div>
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue';
-
 const props = defineProps({
   isOpen: Boolean,
   product: Object

@@ -201,7 +201,7 @@ const filterByPrice = () => {
               href="#"
               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
               role="menuitem"
-              @click.prevent="buyProduct"
+              to="/app/buyproduct"
             >
               Buy Product
             </router-link>
@@ -315,10 +315,9 @@ const filterByPrice = () => {
         </div>
       </div>
     </div>
-
     <!-- Display Product List -->
     <div v-if="products.length > 0" class="grid items-center mx-[8vw] sm:mx-0 sm:grid-cols-2 lg:ml-0 lg:grid-cols-3 mx:ml-[10%] sm:ml-[5%] gap-[5%] mt-16">
-      <div v-for="product in products" :key="product.id" class="bg-[#F4F4F4] flex flex-col gap-3 rounded-md shadow-md p-8">
+      <div v-for="product in products" :key="product.id" class="bg-[#F4F4F4] flex flex-col gap-3 rounded-md shadow-md p-6">
         <div class="flex flex-col gap-2">
           <div class="flex items-center gap-4">
             <img :src="avatar" alt="seller profile" class="w-6 h-6" />
@@ -329,7 +328,7 @@ const filterByPrice = () => {
 
         <div class="flex flex-col gap-4">
           <h3 class="font-medium capitalize">{{ product.name }}</h3>
-          <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-[25vw] h-[16vw] rounded-lg" />
+          <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-[10vw] h-[10vw]  inset-0 rounded-lg text-center" />
           <div class="flex justify-between items-center">
             <p class="text-gray-900">{{ product.price }} Br</p>
             <div class="flex gap-3 items-center justify-end">

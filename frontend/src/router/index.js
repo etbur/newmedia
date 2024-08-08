@@ -6,6 +6,7 @@ import NewPost from '../views/NewPost.vue'
 import PostList from '../views/PostList.vue'
 import Login from '../views/auth/Login.vue'
 import ProductList from '@/views/ProductList.vue'
+import BuyProduct from '@/components/BuyProduct.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -46,6 +47,11 @@ const router = createRouter({
           path: 'newproduct',
           name: 'newproduct',
           component: NewProduct
+        },
+        {
+          path: 'buyproduct',
+          name: 'buyproduct',
+          component: BuyProduct
         }
       ],
       meta: {
