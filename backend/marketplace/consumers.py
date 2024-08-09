@@ -236,9 +236,6 @@ class ProductCategory(WebsocketConsumer):
             }))
             logger.error("Error fetching categories: %s", str(e))
 
-
-
-
 class ProductViewAndRatingUpdateConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.product_id = self.scope['url_route']['kwargs'].get('product_id')

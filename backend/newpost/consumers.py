@@ -116,6 +116,7 @@ class PostCreateConsumer(AsyncWebsocketConsumer):
             'username':post.username,
             "profile_picture":post.profile_picture,
         }
+        
 class PostFetchConsumer(WebsocketConsumer):
     def connect(self):
         self.group_name = 'posts'
@@ -175,6 +176,132 @@ class PostFetchConsumer(WebsocketConsumer):
 
 
 
+# class PostLikeComment(AsyncWebsocketConsumer):
+#     async def connect(self):
+#         logger.info(f"Client {self.channel_name} connected.")
+#         # Allow all users to connect
+#         await self.channel_layer.group_add(
+#             "post_group",
+#             self.channel_name
+#         )
+#         await self.accept()
+
+#     async def disconnect(self, close_code):
+#         logger.info(f"Client {self.channel_name} disconnected.")
+#         await self.channel_layer.group_discard(
+#             "post_group",
+#             self.channel_name
+#         )
+
+#     async def receive(self, text_data):
+#         data = json.loads(text_data)
+#         action = data.get("action")
+#         post_id = data.get("post_id")
+#         username = data.get("username")
+
+#         if action == "like":
+#             liked = data.get("liked")
+#             await self.handle_like(post_id, username, liked)
+#         elif action == "comment":
+#             content = data.get("content")
+#             await self.handle_comment(post_id, username, content)
+#         elif action == "fetch_comments":
+#             await self.fetch_comments(post_id)
+
+#     async def handle_like(self, post_id, username, liked):
+#         try:
+#             post = await database_sync_to_async(Post.objects.get)(id=post_id)
+#             if liked:
+#                 post.count_like += 1
+#             else:
+#                 post.count_like -= 1
+#             await database_sync_to_async(post.save)()
+#             await self.channel_layer.group_send(
+#                 "post_group",
+#                 {
+#                     "type": "send_like",
+#                     "like": {
+#                         "post_id": post_id,
+#                         "liked": liked
+#                     }
+#                 }
+#             )
+#         except ObjectDoesNotExist:
+#             await self.send_error("Post does not exist.")
+#         except Exception as e:
+#             await self.send_error(f"An error occurred while handling like: {str(e)}")
+
+#     async def handle_comment(self, post_id, username, content):
+#         if not content.strip():
+#             await self.send_error("Comment content cannot be empty.")
+#             return
+
+#         try:
+#             user = await database_sync_to_async(get_user_model().objects.get)(username=username)
+#             post = await database_sync_to_async(Post.objects.get)(id=post_id)
+#             comment = await database_sync_to_async(Comment.objects.create)(
+#                 post=post,
+#                 user=user,
+#                 content=content,
+#             )
+#             post.count_comment += 1
+#             await database_sync_to_async(post.save)()
+
+#             await self.channel_layer.group_send(
+#                 "post_group",
+#                 {
+#                     "type": "send_comment",
+#                     "comment": {
+#                         "post_id": post_id,
+#                         "username": username,
+#                         "content": content,
+#                         "created_at": comment.created_at.isoformat(),
+#                     }
+#                 }
+#             )
+#         except ObjectDoesNotExist:
+#             await self.send_error("Post or user does not exist.")
+#         except Exception as e:
+#             await self.send_error(f"An error occurred while handling comment: {str(e)}")
+
+#     async def fetch_comments(self, post_id):
+#         try:
+#             comments = Comment.objects.filter(post_id=post_id)
+#             comments_data = [
+#                 {
+#                     "username": comment.user.username,
+#                     "content": comment.content,
+#                     "created_at": comment.created_at.isoformat(),
+#                 }
+#                 for comment in comments
+#             ]
+#             await self.send(text_data=json.dumps({
+#                 "type": "comments",
+#                 "post_id": post_id,
+#                 "comments": comments_data
+#             }))
+#         except Exception as e:
+#             await self.send_error(f"An error occurred while fetching comments: {str(e)}")
+    
+#     async def send_like(self, event):
+#         await self.send(text_data=json.dumps({
+#             "type": "like",
+#             "like": event["like"]
+#         }))
+
+#     async def send_comment(self, event):
+#         await self.send(text_data=json.dumps({
+#             "type": "comment",
+#             "comment": event["comment"]
+#         }))
+
+#     async def send_error(self, error_message):
+#         await self.send(text_data=json.dumps({
+#             "type": "error",
+#             "error": error_message
+#         }))
+
+
 class PostLikeComment(AsyncWebsocketConsumer):
     async def connect(self):
         logger.info(f"Client {self.channel_name} connected.")
@@ -206,6 +333,11 @@ class PostLikeComment(AsyncWebsocketConsumer):
             await self.handle_comment(post_id, username, content)
         elif action == "fetch_comments":
             await self.fetch_comments(post_id)
+        elif action == "edit_post":
+            content = data.get("content")
+            await self.edit_post(post_id, username, content)
+        elif action == "delete_post":
+            await self.delete_post(post_id, username)
 
     async def handle_like(self, post_id, username, liked):
         try:
@@ -282,6 +414,61 @@ class PostLikeComment(AsyncWebsocketConsumer):
         except Exception as e:
             await self.send_error(f"An error occurred while fetching comments: {str(e)}")
     
+    async def edit_post(self, post_id, username, content):
+        if not content.strip():
+            await self.send_error("Post content cannot be empty.")
+            return
+
+        try:
+            user = await database_sync_to_async(get_user_model().objects.get)(username=username)
+            post = await database_sync_to_async(Post.objects.get)(id=post_id)
+
+            if post.user != user:
+                await self.send_error("You are not the owner of this post.")
+                return
+
+            post.content = content
+            await database_sync_to_async(post.save)()
+
+            await self.channel_layer.group_send(
+                "post_group",
+                {
+                    "type": "send_edit",
+                    "post": {
+                        "post_id": post_id,
+                        "content": content,
+                        "updated_at": post.updated_at.isoformat(),
+                    }
+                }
+            )
+        except ObjectDoesNotExist:
+            await self.send_error("Post or user does not exist.")
+        except Exception as e:
+            await self.send_error(f"An error occurred while editing post: {str(e)}")
+
+    async def delete_post(self, post_id, username):
+        try:
+            user = await database_sync_to_async(get_user_model().objects.get)(username=username)
+            post = await database_sync_to_async(Post.objects.get)(id=post_id)
+
+            if post.user != user:
+                await self.send_error("You are not the owner of this post.")
+                return
+
+            await database_sync_to_async(post.delete)()
+
+            await self.channel_layer.group_send(
+                "post_group",
+                {
+                    "type": "send_delete",
+                    "post_id": post_id
+                }
+            )
+        except ObjectDoesNotExist:
+            await self.send_error("Post does not exist.")
+        except Exception as e:
+            await self.send_error(f"An error occurred while deleting post: {str(e)}")
+
     async def send_like(self, event):
         await self.send(text_data=json.dumps({
             "type": "like",
@@ -294,8 +481,21 @@ class PostLikeComment(AsyncWebsocketConsumer):
             "comment": event["comment"]
         }))
 
+    async def send_edit(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "edit",
+            "post": event["post"]
+        }))
+
+    async def send_delete(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "delete",
+            "post_id": event["post_id"]
+        }))
+
     async def send_error(self, error_message):
         await self.send(text_data=json.dumps({
             "type": "error",
             "error": error_message
         }))
+        

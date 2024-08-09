@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from "vue";
+import EditPostModal from '../components/EditPostModal.vue';
 import { useRouter } from "vue-router";
 import { format } from "date-fns";
 import avatar from "../assets/avatar.png";
@@ -17,7 +18,9 @@ const commentBoxVisible = ref(null);
 const commentContent = ref("");
 const dropdownVisible = ref(null);
 const expandedPostId = ref(null);
-
+const showEditModal = ref(null);
+const selectedPost = ref(null);
+const isOwner = (post) => store.state.activeUser.id === post.user_id;
 const isAuthenticated = () => !!store.state.activeUser;
 console.log(store.state.activeUser)
 
@@ -135,6 +138,7 @@ const showCommentBox = (postId) => {
   }
 };
 
+
 const fetchComments = (postId) => {
   try {
     actionWebSocket.value.send(
@@ -179,6 +183,8 @@ const onFetchWebSocketMessage = (event) => {
   }
 };
 
+
+
 const onActionWebSocketMessage = (event) => {
   try {
     const data = JSON.parse(event.data);
@@ -206,6 +212,7 @@ const onActionWebSocketMessage = (event) => {
 };
 
 
+
 const updatePostComments = (postId, comments) => {
   const post = posts.value.find((p) => p.id === postId);
   if (post) {
@@ -219,15 +226,7 @@ const onWebSocketError = (error) => {
   console.error("WebSocket error:", error);
 };
 
-const downloadMedia = (post) => {
-  const mediaUrl = `http://localhost:8000${post.media}`;
-  const link = document.createElement('a');
-  link.href = mediaUrl;
-  link.download = post.media.split('/').pop(); // Filename
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+
 
 const copyLinkToClipboard = (post) => {
   const url = `http://localhost:8000/posts/${post.id}`;
@@ -302,28 +301,36 @@ const toggleDropdown = (postId) => {
   dropdownVisible.value = dropdownVisible.value === postId ? null : postId;
 };
 
-const editPost = (postId) => {
-  const newTitle = prompt("Enter new title:");
-  const newDescription = prompt("Enter new description:");
 
-  if (!newTitle || !newDescription) {
-    console.error("Title or description cannot be empty");
-    return;
+const editPost = (post) => {
+  if (post && isOwner(post)) {
+    selectedPost.value = post;  
+    showEditModal.value = true;
+  } else {
+    console.error("Post is null or you are not authorized to edit this post");
   }
+};
 
-  try {
-    actionWebSocket.value.send(
-      JSON.stringify({
-        action: "edit",
-        post_id: postId,
-        new_data: {
-          title: newTitle,
-          description: newDescription
-        }
-      })
-    );
-  } catch (error) {
-    console.error("Error sending edit request:", error);
+
+const handleEdit = (updatedPost) => {
+  if (selectedPost.value && selectedPost.value.id) {
+    console.log("Editing post with ID:", selectedPost.value.id);
+    console.log("Updated data:", updatedPost);
+    try {
+      actionWebSocket.value.send(
+        JSON.stringify({
+          action: "edit",
+          post_id: selectedPost.value.id,
+          new_data: updatedPost
+        })
+      );
+    } catch (error) {
+      console.error("Error sending edit request:", error);
+    }
+    showEditModal.value = false;
+    selectedPost.value = null;
+  } else {
+    console.error("No selected post or post ID is missing.");
   }
 };
 
@@ -342,6 +349,18 @@ const deletePost = (postId) => {
   }
 };
 
+
+const downloadMedia = (post) => {
+  const mediaUrl = `http://localhost:8000${post.media}`;
+  const link = document.createElement('a');
+  link.href = mediaUrl;
+  link.download = post.media.split('/').pop(); // Filename
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  // Show a confirmation message
+  alert('Download started');
+};
 
 
 onMounted(() => {
@@ -406,9 +425,10 @@ onUnmounted(() => {
                   <ul>
                     <li
                       class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                      @click="editPost(post.id)"
+                      @click="editPost(post)"
                     >
                       Edit Post
+
                     </li>
                     <li
                       class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
@@ -611,5 +631,15 @@ onUnmounted(() => {
         </button>
       </div>
     </div>
+
+
   </div>
+  <EditPostModal
+  v-if="showEditModal"
+  :post="selectedPost"
+  :show="showEditModal"
+  @close="showEditModal = false"
+  @edit="handleEdit"
+/>
+
 </template>
