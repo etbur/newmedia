@@ -1,6 +1,6 @@
 <template>
-  <div v-if="show" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-80">
+  <div v-if="show" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50 ">
+    <div class="bg-white p-16 rounded-lg shadow-lg w-[50vw]">
       <h3 class="text-lg font-semibold mb-4">Edit Post</h3>
       <form @submit.prevent="submitEdit">
         <div class="mb-4">
@@ -17,7 +17,7 @@
         </div>
         <div class="mb-4">
           <label for="media" class="block text-sm font-medium text-gray-700">Media URLs </label>
-          <input type="file" id="media" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" @change="handleFileChange" />
+          <input type="file" id="media" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" @change="handleMediaUpload" />
         </div>
         <div class="mb-4">
           <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
@@ -52,6 +52,7 @@ const emit = defineEmits(['close', 'edit']);
 const title = ref(props.post ? props.post.title : '');
 const description = ref(props.post ? props.post.description : '');
 const tags = ref(props.post ? props.post.tags : '');
+const media = ref(props.post ? props.post.media : '');
 const location = ref(props.post ? props.post.location : '');
 const audience = ref(props.post ? props.post.audience : 'public');
 const error = ref(''); // For displaying errors
@@ -67,17 +68,15 @@ watch(() => props.post, (newPost) => {
   }
 });
 
-const handleFileChange = (event) => {
-  const files = event.target.files;
-  if (files.length) {
-    try {
-      const fileUrls = Array.from(files).map(file => URL.createObjectURL(file));
-      media.value = fileUrls; // Store the file URLs
-    } catch (err) {
-      error.value = 'Failed to process files. Please try again.';
-      console.error(err);
-    }
-  }
+const handleMediaUpload = (event) => {
+  const file = event.target.files[0];
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => {
+  };
+  reader.onerror = (error) => {
+    console.error("Error reading file:", error);
+  };
 };
 
 const submitEdit = async () => {

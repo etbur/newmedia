@@ -110,7 +110,6 @@ import * as Yup from "yup";
 import store from "@/store";
 
 const router = useRouter();
-// const store=useStore()
 
 const previewUrl = ref(null);
 const formInput = reactive({

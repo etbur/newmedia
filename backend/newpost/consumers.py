@@ -337,7 +337,7 @@ class PostLikeComment(AsyncWebsocketConsumer):
             content = data.get("content")
             await self.edit_post(post_id, username, content)
         elif action == "delete_post":
-            await self.delete_post(post_id, username)
+            await self.delete_post(post_id)
 
     async def handle_like(self, post_id, username, liked):
         try:
@@ -413,7 +413,7 @@ class PostLikeComment(AsyncWebsocketConsumer):
             }))
         except Exception as e:
             await self.send_error(f"An error occurred while fetching comments: {str(e)}")
-    
+
     async def edit_post(self, post_id, username, content):
         if not content.strip():
             await self.send_error("Post content cannot be empty.")
@@ -446,14 +446,15 @@ class PostLikeComment(AsyncWebsocketConsumer):
         except Exception as e:
             await self.send_error(f"An error occurred while editing post: {str(e)}")
 
-    async def delete_post(self, post_id, username):
+    async def delete_post(self, post_id):
         try:
-            user = await database_sync_to_async(get_user_model().objects.get)(username=username)
+            logger.info('post is',post_id )
+            # user = await database_sync_to_async(get_user_model().objects.get)(username=username)
             post = await database_sync_to_async(Post.objects.get)(id=post_id)
 
-            if post.user != user:
-                await self.send_error("You are not the owner of this post.")
-                return
+            # if post.user != user:
+            #     await self.send_error("You are not the owner of this post.")
+            #     return
 
             await database_sync_to_async(post.delete)()
 
@@ -483,13 +484,13 @@ class PostLikeComment(AsyncWebsocketConsumer):
 
     async def send_edit(self, event):
         await self.send(text_data=json.dumps({
-            "type": "edit",
+            "type": "edit_post",
             "post": event["post"]
         }))
 
     async def send_delete(self, event):
         await self.send(text_data=json.dumps({
-            "type": "delete",
+            "type": "delete_post",
             "post_id": event["post_id"]
         }))
 
@@ -498,4 +499,3 @@ class PostLikeComment(AsyncWebsocketConsumer):
             "type": "error",
             "error": error_message
         }))
-        
