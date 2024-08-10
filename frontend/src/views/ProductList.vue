@@ -301,7 +301,7 @@ const showLess = () => {
         </div>
         <div
           v-show="dropdowns.sell"
-          class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+          class="origin-top-right z-10 absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
           role="menu"
           aria-orientation="vertical"
           aria-labelledby="menu-button"
@@ -353,15 +353,15 @@ const showLess = () => {
         </div>
         <div
           v-show="dropdowns.filter"
-          class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+          class="origin-top-right z-10 absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
           role="menu"
           aria-orientation="vertical"
           aria-labelledby="menu-button"
         >
-          <div class="py-1" role="none">
+          <div class="py-1 " role="none">
             <a
               href="#"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 "
               role="menuitem"
               @click.prevent="applyFilters"
             >
@@ -396,7 +396,7 @@ const showLess = () => {
                 type="text"
                 v-model="location"
                 placeholder="location"
-                class="border py-1 px-2 ml-2"
+                class="border py-1 px-2 my-2"
               />
             </a>
             <a
@@ -410,7 +410,7 @@ const showLess = () => {
                 type="number"
                 v-model.number="minPrice"
                 placeholder="min"
-                class="w-16 py-1 px-2 ml-2 border"
+                class="w-16 py-1 px-2 ml-2  border"
                 min="0"
               />
               <input
@@ -513,7 +513,7 @@ const showLess = () => {
         <!-- Product Details -->
         <div class="flex flex-col gap-3 sm:gap-4">
          
-          <p class="text-[#008a8a] text-base ">
+          <p class="text-gray-900 text-base ">
             {{ product.price }} Br
           </p>
           <div
@@ -554,7 +554,7 @@ const showLess = () => {
   </div>
 
     <!-- Load More / Show Less Buttons -->
-    <div class="flex justify-center mt-8 pb-4" >
+    <div class="flex justify-end mt-8 pb-4 mx-[6%]" >
       <button
         v-if="displayedProductsCount < products.length"
         @click="loadMore"
