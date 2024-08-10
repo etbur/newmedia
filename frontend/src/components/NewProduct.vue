@@ -151,7 +151,7 @@ const handleImageChange = (event) => {
 
 <template>
   <div class="flex flex-col gap-7 mx-[10vw] md:ml-[10vw]">
-    <h2 class="text-[#008a8a] font-medium text-xl">Sell  a Product...</h2>
+    <h2 class="text-[#008a8a] font-medium text-lg">Sell a Product...</h2>
     <form @submit.prevent="createProduct" class="flex flex-col gap-4">
       <div class="flex flex-col gap-4  md:flex-row md:gap-[5%]">
         <input

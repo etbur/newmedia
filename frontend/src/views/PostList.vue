@@ -316,7 +316,6 @@ const handleEdit = (updatedPost) => {
   }
 };
 
-
 const editPost = (post) => {
   if (post && isOwner(post)) {
     selectedPost.value = post;
@@ -381,16 +380,18 @@ onUnmounted(() => {
     <!-- Posts Section -->
     <div class="grid grid-col-2 sm:grid-cols-1 gap-8 bg-[#f4f4f4] py-6">
       <div
-        class="bg-[#ffffff] grid grid-cols-1 mx-8 px-6 shadow-sm w-full sm:w-[35vw]"
+        class="bg-[#ffffff] grid grid-cols-1 mx-8 px-6 rounded-md w-full sm:w-[35vw] transition-transform transform hover:scale-105 shadow-md"
         v-for="post in formattedPosts"
         :key="post.id"
       >
         <div class="flex justify-end relative right-3 pt-5 mb-2">
-          <Icon
-            icon="mdi:close"
-            class="text-gray-800 w-5 h-5 hover:text-red-600 cursor-pointer"
-            @click="closePost(post.id)"
-          />
+          <span :title="`Close`">
+            <Icon
+              icon="mdi:close"
+              class="text-gray-800 w-5 h-5 hover:text-red-600 cursor-pointer"
+              @click="closePost(post.id)"
+            />
+          </span>
         </div>
         <div class="flex flex-col">
           <div
@@ -407,14 +408,17 @@ onUnmounted(() => {
             </div>
             <div>
               <!-- More Options Dropdown -->
-        
+
               <div class="relative flex gap-2">
                 {{ post.formatted_created_at }}
-                <Icon
-                  icon="mdi:dots-vertical"
-                  class="text-gray-800 hover:text-[#C59728] cursor-pointer text-sm w-10 h-5 sm:text-base"
-                  @click="toggleDropdown(post.id)"
-                />
+                <span :title="`More options`">
+                  <Icon
+                    icon="mdi:dots-vertical"
+                    class="text-gray-800 hover:text-[#C59728] cursor-pointer text-sm w-10 h-5 z-10 sm:text-base"
+                    @click="toggleDropdown(post.id)"
+                  />
+                </span>
+
                 <div
                   v-if="dropdownVisible === post.id && isOwner(post)"
                   class="absolute -right-44 mt-3 w-48 bg-gray-50 border border-gray-300 rounded-md shadow-lg z-30"
@@ -518,16 +522,17 @@ onUnmounted(() => {
               />
             </button>
 
-            <button @click="sharePost(post)" class="flex flex-col gap-2">
-              <Icon
-                icon="mdi:share-outline"
-                class="cursor-pointer"
-                title="Share"
-              />
+            <button
+              @click="sharePost(post)"
+              class="flex flex-col gap-2"
+              :title="`Share`"
+            >
+              <Icon icon="mdi:share-outline" class="cursor-pointer" />
             </button>
             <button
               @click="copyLinkToClipboard(post)"
               class="flex flex-col gap-2"
+              :title="`CopyLink`"
             >
               <Icon
                 icon="mdi:content-copy"
@@ -535,7 +540,11 @@ onUnmounted(() => {
                 title="copyLink"
               />
             </button>
-            <button @click="downloadMedia(post)" class="flex flex-col gap-2">
+            <button
+              @click="downloadMedia(post)"
+              class="flex flex-col gap-2"
+              :title="`Download`"
+            >
               <Icon
                 icon="mdi:download-outline"
                 class="cursor-pointer"

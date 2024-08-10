@@ -506,7 +506,7 @@ const showLess = () => {
           <img
             :src="`http://localhost:8000${product.image}`"
             alt="Product Image"
-            class="  w-full h-60 sm:h-48 object-cover rounded-lg transition-transform transform  "
+            class="  w-full h-60 sm:h-48 object-cover rounded-lg "
           />
         </div>
 
