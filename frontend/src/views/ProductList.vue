@@ -1,13 +1,20 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
-import avatar from '../assets/avatar.png';
-import ProductDetailModal from '../components/ProductDetailModal.vue'
-import StarRating from '../components/StarRating.vue';
+import { ref, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
+import avatar from "../assets/avatar.png";
+import ProductDetailModal from "../components/ProductDetailModal.vue";
+import StarRating from "../components/StarRating.vue";
 
 const products = ref([]);
+const minRating = ref(null);
+const maxRating = ref(null);
+const minPrice = ref(null);
+const maxPrice = ref(null);
+const location = ref("");
 const categories = ref([]);
-const alt=ref('seller profile')
+const displayedProductsCount = ref(6);
+const initialProductsCount = 6;
+const alt = ref("seller profile");
 const dropdowns = ref({
   sell: false,
   filter: false,
@@ -15,7 +22,7 @@ const dropdowns = ref({
 });
 
 const selectedCategory = ref(null);
-const selectedProduct = ref(null); 
+const selectedProduct = ref(null);
 const showModal = ref(false);
 const router = useRouter();
 
@@ -27,56 +34,82 @@ let productWebSocket = null;
 let categoryWebSocket = null;
 
 const connectProductWebSocket = () => {
-  productWebSocket = new WebSocket('ws://localhost:8000/ws/products/fetch/');
+  productWebSocket = new WebSocket("ws://localhost:8000/ws/products/fetch/");
 
   productWebSocket.onopen = () => {
-    console.log('Product WebSocket connection opened');
+    console.log("Product WebSocket connection opened");
     if (selectedCategory.value) {
-      productWebSocket.send(JSON.stringify({ action: 'filter_by_category', category: selectedCategory.value }));
+      productWebSocket.send(
+        JSON.stringify({
+          action: "filter_by_category",
+          category: selectedCategory.value,
+        })
+      );
     } else {
-      productWebSocket.send(JSON.stringify({ action: 'fetch_all_products' }));
+      productWebSocket.send(JSON.stringify({ action: "fetch_all_products" }));
     }
   };
 
   productWebSocket.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    console.log('Received Product Data:', data);
+    console.log("Received Product Data:", data);
 
-    if (data.action === 'fetch_all_products_success') {
+    if (data.action === "fetch_all_products_success") {
       products.value = data.products;
-    } else if (data.action === 'filter_by_category_success') {
+    } else if (data.action === "filter_by_category_success") {
       products.value = data.products;
-    } else if (data.action === 'fetch_all_products_error' || data.action === 'filter_by_category_error') {
-      console.error('Error fetching products:', data.error);
+    } else if (
+      data.action === "fetch_all_products_error" ||
+      data.action === "filter_by_category_error"
+    ) {
+      console.error("Error fetching products:", data.error);
     }
   };
 
   productWebSocket.onclose = () => {
-    console.log('Product WebSocket connection closed');
+    console.log("Product WebSocket connection closed");
   };
 };
 
+const applyFilters = () => {
+  if (productWebSocket) {
+    productWebSocket.send(
+      JSON.stringify({
+        action: "filter_products",
+        category: selectedCategory.value,
+        min_rating: minRating.value,
+        max_rating: maxRating.value,
+        min_price: minPrice.value,
+        max_price: maxPrice.value,
+        location: location.value,
+      })
+    );
+  }
+};
+
 const connectCategoryWebSocket = () => {
-  categoryWebSocket = new WebSocket('ws://localhost:8000/ws/products/categories/');
+  categoryWebSocket = new WebSocket(
+    "ws://localhost:8000/ws/products/categories/"
+  );
 
   categoryWebSocket.onopen = () => {
-    console.log('Category WebSocket connection opened');
-    categoryWebSocket.send(JSON.stringify({ action: 'fetch_categories' }));
+    console.log("Category WebSocket connection opened");
+    categoryWebSocket.send(JSON.stringify({ action: "fetch_categories" }));
   };
 
   categoryWebSocket.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    console.log('Received Category Data:', data);
+    console.log("Received Category Data:", data);
 
-    if (data.action === 'fetch_categories_success') {
+    if (data.action === "fetch_categories_success") {
       categories.value = data.categories;
-    } else if (data.action === 'fetch_categories_error') {
-      console.error('Error fetching categories:', data.error);
+    } else if (data.action === "fetch_categories_error") {
+      console.error("Error fetching categories:", data.error);
     }
   };
 
   categoryWebSocket.onclose = () => {
-    console.log('Category WebSocket connection closed');
+    console.log("Category WebSocket connection closed");
   };
 };
 
@@ -84,60 +117,66 @@ const showCategory = (category) => {
   console.log(`Showing products in the ${category} category`);
   selectedCategory.value = category;
   if (productWebSocket) {
-    productWebSocket.send(JSON.stringify({
-      action: 'filter_by_category',
-      category: category
-    }));
+    productWebSocket.send(
+      JSON.stringify({
+        action: "filter_by_category",
+        category: category,
+      })
+    );
   }
 };
 
 const updateViewCount = (productId) => {
-  const updateViewWebSocket = new WebSocket(`ws://localhost:8000/ws/products/update/${productId}/`);
+  const updateViewWebSocket = new WebSocket(
+    `ws://localhost:8000/ws/products/update/${productId}/`
+  );
   updateViewWebSocket.onopen = () => {
-    updateViewWebSocket.send(JSON.stringify({ action: 'update_product_view' }));
+    updateViewWebSocket.send(JSON.stringify({ action: "update_product_view" }));
   };
 
   updateViewWebSocket.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    if (data.action === 'update_product_view_success') {
-      console.log('Product view updated successfully:', data.num_views);
-    } else if (data.action === 'update_product_view_error') {
-      console.error('Error updating product view:', data.error);
+    if (data.action === "update_product_view_success") {
+      console.log("Product view updated successfully:", data.num_views);
+    } else if (data.action === "update_product_view_error") {
+      console.error("Error updating product view:", data.error);
     }
   };
 
   updateViewWebSocket.onclose = () => {
-    console.log('Update View WebSocket connection closed');
+    console.log("Update View WebSocket connection closed");
   };
 };
 
-
-
 const updateProductRating = (productId, rating) => {
-  const updateRatingWebSocket = new WebSocket(`ws://localhost:8000/ws/products/update/${productId}/`);
+  const updateRatingWebSocket = new WebSocket(
+    `ws://localhost:8000/ws/products/update/${productId}/`
+  );
   updateRatingWebSocket.onopen = () => {
-    updateRatingWebSocket.send(JSON.stringify({
-      action: 'update_product_rating',
-      rating: rating
-    }));
+    updateRatingWebSocket.send(
+      JSON.stringify({
+        action: "update_product_rating",
+        rating: rating,
+      })
+    );
   };
 
   updateRatingWebSocket.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    if (data.action === 'update_product_rating_success') {
-      console.log('Product rating updated successfully:', data.rating);
+    if (data.action === "update_product_rating_success") {
+      console.log("Product rating updated successfully:", data.rating);
       // Optionally update the product rating locally
-      const product = products.value.find(p => p.id === productId);
+      const product = products.value.find((p) => p.id === productId);
       if (product) {
         product.rating = data.rating;
       }
-    } else if (data.action === 'update_product_rating_error') {
-      console.error('Error updating product rating:', data.error);
+    } else if (data.action === "update_product_rating_error") {
+      console.error("Error updating product rating:", data.error);
     }
   };
 
   updateRatingWebSocket.onclose = () => {
-    console.log('Update Rating WebSocket connection closed');
+    console.log("Update Rating WebSocket connection closed");
   };
 };
 const openModal = (product) => {
@@ -164,24 +203,78 @@ onUnmounted(() => {
 });
 
 const addProduct = () => {
-  router.push('/app/newproduct');
+  router.push("/app/newproduct");
 };
 const filterByRating = () => {
-  // Implement the logic for filtering by rating
+  // Example: Prompt user for min and max rating
+  const minRating = prompt("Enter minimum rating:");
+  const maxRating = prompt("Enter maximum rating:");
+
+  if (minRating !== null && maxRating !== null) {
+    if (productWebSocket) {
+      productWebSocket.send(
+        JSON.stringify({
+          action: "filter_by_rating",
+          min_rating: parseFloat(minRating),
+          max_rating: parseFloat(maxRating),
+        })
+      );
+    }
+  }
 };
 
 const filterByLocation = () => {
-  // Implement the logic for filtering by location
+  // Example: Prompt user for location
+  const location = prompt("Enter location:");
+
+  if (location) {
+    if (productWebSocket) {
+      productWebSocket.send(
+        JSON.stringify({
+          action: "filter_by_location",
+          location: location,
+        })
+      );
+    }
+  }
 };
 
 const filterByPrice = () => {
-  // Implement the logic for filtering by price
+  // Example: Prompt user for min and max price
+  const minPrice = prompt("Enter minimum price:");
+  const maxPrice = prompt("Enter maximum price:");
+
+  if (minPrice !== null && maxPrice !== null) {
+    if (productWebSocket) {
+      productWebSocket.send(
+        JSON.stringify({
+          action: "filter_by_price",
+          min_price: parseFloat(minPrice),
+          max_price: parseFloat(maxPrice),
+        })
+      );
+    }
+  }
+};
+
+const loadMore = () => {
+  displayedProductsCount.value = Math.min(
+    displayedProductsCount.value + 6,
+    products.value.length
+  );
+};
+
+const showLess = () => {
+  displayedProductsCount.value = Math.max(
+    initialProductsCount,
+    displayedProductsCount.value - 6
+  );
 };
 </script>
 
 <template>
   <div class="md:mx-[2vw]">
-    <div class="flex flex-wrap ml-[8vw] md:mx-0 md:justify-end gap-6 mb-3 ">
+    <div class="flex flex-wrap ml-[8vw] md:mx-0 md:justify-end gap-6 mb-3">
       <!-- Dropdowns for actions -->
       <div class="relative inline-block text-left">
         <div>
@@ -270,25 +363,63 @@ const filterByPrice = () => {
               href="#"
               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
               role="menuitem"
-              @click.prevent="filterByRating"
+              @click.prevent="applyFilters"
             >
-              Filter by Rating
+              Rating
+              <input
+                type="number"
+                v-model.number="minRating"
+                placeholder="min"
+                class="w-16 py-1 px-2 ml-2 border"
+                min="0"
+                max="5"
+                step="0.1"
+              />
+              <input
+                type="number"
+                v-model.number="maxRating"
+                placeholder="max"
+                class="w-16 border py-1 px-2"
+                min="0"
+                max="5"
+                step="0.1"
+              />
             </a>
             <a
               href="#"
               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
               role="menuitem"
-              @click.prevent="filterByLocation"
+              @click.prevent="applyFilters"
             >
-              Filter by Location
+              Location
+              <input
+                type="text"
+                v-model="location"
+                placeholder="location"
+                class="border py-1 px-2 ml-2"
+              />
             </a>
             <a
               href="#"
               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
               role="menuitem"
-              @click.prevent="filterByPrice"
+              @click.prevent="applyFilters"
             >
-              Filter by Price
+              Price
+              <input
+                type="number"
+                v-model.number="minPrice"
+                placeholder="min"
+                class="w-16 py-1 px-2 ml-2 border"
+                min="0"
+              />
+              <input
+                type="number"
+                v-model.number="maxPrice"
+                placeholder="max"
+                class="w-16 border py-1 px-2"
+                min="0"
+              />
             </a>
           </div>
         </div>
@@ -320,7 +451,7 @@ const filterByPrice = () => {
         </div>
         <div
           v-show="dropdowns.category"
-          class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+          class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
           role="menu"
           aria-orientation="vertical"
           aria-labelledby="menu-button"
@@ -341,43 +472,103 @@ const filterByPrice = () => {
       </div>
     </div>
     <!-- Display Product List -->
-    <div v-if="products.length > 0" class="grid items-center mx-[8vw] sm:mx-0 sm:grid-cols-2 lg:ml-0 lg:grid-cols-3 mx:ml-[10%] sm:ml-[5%] gap-[5%] mt-16">
-      <div v-for="product in products" :key="product.id" class="bg-[#F4F4F4] flex flex-col gap-3 rounded-md shadow-md p-6">
+    <div
+      v-if="products.length > 0"
+      class="grid items-center mx-[8%] sm:mx-[6%] md:mx-6 lg:mx-8 xl:mx-12  sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-16 mt-8 sm:mt-12 lg:mt-16"
+    >
+      <div
+        v-for="(product, index) in products.slice(0, displayedProductsCount)"
+        :key="product.id"
+        class="bg-white flex flex-col gap-4 rounded-lg shadow-lg p-4 sm:p-6 transition-transform transform hover:scale-105  w-[80%] sm:w-full"
+      >
+        <!-- Seller Info -->
         <div class="flex flex-col gap-2">
-          <div class="flex items-center gap-4">
-            <img :src="product.seller_profile_picture || avatar" v-bind:alt="alt" class="w-6 h-6" />
-            <p class="text-sm capitalize">{{ product.seller_profile_name }}</p>
+          
+          <div class="flex items-center gap-3 sm:gap-4">
+            <img
+              :src="product.seller_profile_picture || avatar"
+              v-bind:alt="alt"
+              class="w-6 h-6 rounded-full "
+            />
+            <p class="sm:text-base text-sm">
+              {{ product.seller_profile_name }}
+            </p>
           </div>
-          <p class="text-sm">{{ product.created_at }}</p>
+          <p class="text-gray-600 text-sm">
+            {{ product.created_at }}
+          </p>
+        </div>
+        <h3 class="sm:text-lg font-medium capitalize">
+            {{ product.name }}
+          </h3>
+        <!-- Product Image -->
+        <div class="flex ">
+          <img
+            :src="`http://localhost:8000${product.image}`"
+            alt="Product Image"
+            class="  w-full h-60 sm:h-48 object-cover rounded-lg transition-transform transform  "
+          />
         </div>
 
-        <div class="flex flex-col gap-4">
-          <h3 class="font-medium capitalize">{{ product.name }}</h3>
-          <img :src="`http://localhost:8000${product.image}`" alt="Product Image" class="w-[10vw] h-[10vw] inset-0 rounded-lg text-center" />
-          <div class="flex justify-between items-center">
-            <p class="text-gray-900">{{ product.price }} Br</p>
-            <div class="flex gap-3 items-center justify-end">
-              <StarRating :rating="product.rating" @rating-changed="updateProductRating(product.id, $event)" />
-
-              <router-link class="text-[#00b4b4] px-4 py-2 rounded-md flex gap-2" @click.prevent="updateViewCount(product.id)">
-                {{ product.views }}<span>Views</span>
-              </router-link>
-              <button class="text-[#00b4b4] px-4 py-2 rounded-md" @click="openModal(product)">
-                Detail
-              </button>
-            </div>
+        <!-- Product Details -->
+        <div class="flex flex-col gap-3 sm:gap-4">
+         
+          <p class="text-[#008a8a] text-base ">
+            {{ product.price }} Br
+          </p>
+          <div
+            class="flex flex-wrap sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4"
+          >
+            <StarRating
+              :rating="product.rating"
+              @rating-changed="updateProductRating(product.id, $event)"
+            />
+            <router-link
+              class="text-teal-500 hover:underline px-2 py-1 rounded-md flex gap-2"
+              @click.prevent="updateViewCount(product.id)"
+            >
+              {{ product.views }} <span>Views</span>
+            </router-link>
+            <button
+              class="text-teal-500 hover:underline px-2 py-1 rounded-md"
+              @click="openModal(product)"
+            >
+              Detail
+            </button>
           </div>
         </div>
       </div>
     </div>
-    <div v-else class="text-center mt-16 text-gray-500">
-      No products available.
+
+    <!-- No Products Available -->
+    <div v-else class="text-xl font-medium mt-[2vh]  text-[#008a8a] ">
+      No products available !
     </div>
-    <
-  
+
     <!-- Product Detail Modal -->
-    <ProductDetailModal :isOpen="showModal" :product="selectedProduct" @close="closeModal" />
+    <ProductDetailModal
+      :isOpen="showModal"
+      :product="selectedProduct"
+      @close="closeModal"
+    />
   </div>
-  
+
+    <!-- Load More / Show Less Buttons -->
+    <div class="flex justify-center mt-8 pb-4" >
+      <button
+        v-if="displayedProductsCount < products.length"
+        @click="loadMore"
+        class="px-4 py-2 bg-[#008a8a] text-white rounded-lg hover:bg-[#C59728]"
+      >
+        Load More
+      </button>
+      <button
+        v-if="displayedProductsCount > initialProductsCount"
+        @click="showLess"
+        class="px-4 py-2 bg-[#008a8a] text-white rounded-lg hover:bg-[#C59728] ml-2"
+      >
+        Show Less
+      </button>
+    </div>
 </template>
 

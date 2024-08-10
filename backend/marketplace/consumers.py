@@ -101,6 +101,17 @@ class ProductListConsumer(WebsocketConsumer):
         elif action == 'filter_by_category':
             category = text_data_json.get('category')
             self.filter_by_category(category)
+        elif action == 'filter_by_price':
+            min_price = text_data_json.get('min_price')
+            max_price = text_data_json.get('max_price')
+            self.filter_by_price(min_price, max_price)
+        elif action == 'filter_by_location':
+            location = text_data_json.get('location')
+            self.filter_by_location(location)
+        elif action == 'filter_by_rating':
+            min_rating = text_data_json.get('min_rating')
+            max_rating = text_data_json.get('max_rating')
+            self.filter_by_rating(min_rating, max_rating)
         else:
             self.send(text_data=json.dumps({
                 'action': 'error',
@@ -125,7 +136,6 @@ class ProductListConsumer(WebsocketConsumer):
 
     def filter_by_category(self, category):
         try:
-            # Ensure that the category exists in the choices
             valid_categories = [c[0] for c in Products.CATEGORY_CHOICES]
             if category not in valid_categories:
                 self.send(text_data=json.dumps({
@@ -147,7 +157,57 @@ class ProductListConsumer(WebsocketConsumer):
                 'error': str(e)
             }))
             logger.error("Error filtering products by category %s: %s", category, str(e))
-            
+
+    def filter_by_price(self, min_price, max_price):
+        try:
+            products = Products.objects.filter(price__gte=min_price, price__lte=max_price)
+            serializer = ProductSerializer(products, many=True)
+            product_list = serializer.data
+            self.send(text_data=json.dumps({
+                'action': 'filter_by_price_success',
+                'products': product_list
+            }))
+        except Exception as e:
+            self.send(text_data=json.dumps({
+                'action': 'filter_by_price_error',
+                'error': str(e)
+            }))
+            logger.error("Error filtering products by price range %s-%s: %s", min_price, max_price, str(e))
+
+    def filter_by_location(self, location):
+        try:
+            # Assuming location is a field in Products model
+            products = Products.objects.filter(location=location)
+            serializer = ProductSerializer(products, many=True)
+            product_list = serializer.data
+            self.send(text_data=json.dumps({
+                'action': 'filter_by_location_success',
+                'products': product_list
+            }))
+        except Exception as e:
+            self.send(text_data=json.dumps({
+                'action': 'filter_by_location_error',
+                'error': str(e)
+            }))
+            logger.error("Error filtering products by location %s: %s", location, str(e))
+
+    def filter_by_rating(self, min_rating, max_rating):
+        try:
+            products = Products.objects.filter(rating__gte=min_rating, rating__lte=max_rating)
+            serializer = ProductSerializer(products, many=True)
+            product_list = serializer.data
+            self.send(text_data=json.dumps({
+                'action': 'filter_by_rating_success',
+                'products': product_list
+            }))
+        except Exception as e:
+            self.send(text_data=json.dumps({
+                'action': 'filter_by_rating_error',
+                'error': str(e)
+            }))
+            logger.error("Error filtering products by rating range %s-%s: %s", min_rating, max_rating, str(e))
+
+
 
 class ProductUpdateConsumer(AsyncWebsocketConsumer):
     async def connect(self):

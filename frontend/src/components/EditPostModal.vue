@@ -1,23 +1,26 @@
 <template>
-  <div v-if="show" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50 ">
-    <div class="bg-white p-16 rounded-lg shadow-lg w-[50vw]">
+  <div v-if="show" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-[50vw]">
       <h3 class="text-lg font-semibold mb-4">Edit Post</h3>
-      <form @submit.prevent="submitEdit">
+      <form @submit.prevent="handleEdit">
         <div class="mb-4">
           <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
-          <input v-model="title" id="title" type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded-md"/>
+          <input v-model="title" id="title" type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required />
         </div>
         <div class="mb-4">
           <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-          <textarea v-model="description" id="description" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded-md"></textarea>
+          <textarea v-model="description" id="description" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required></textarea>
         </div>
         <div class="mb-4">
           <label for="tags" class="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
           <input v-model="tags" id="tags" type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" />
         </div>
         <div class="mb-4">
-          <label for="media" class="block text-sm font-medium text-gray-700">Media URLs </label>
+          <label for="media" class="block text-sm font-medium text-gray-700">Media</label>
           <input type="file" id="media" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" @change="handleMediaUpload" />
+          <div v-if="mediaPreview" class="mt-2">
+            <img :src="mediaPreview" alt="Preview" class="rounded-lg w-16" />
+          </div>
         </div>
         <div class="mb-4">
           <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
@@ -31,16 +34,17 @@
           </select>
         </div>
         <div class="flex justify-end gap-4">
-          <button type="submit" class="bg-[#C59728] text-white px-4 py-2 rounded" @click="handleEdit">Save</button>
+          <button type="submit" class="bg-[#C59728] text-white px-4 py-2 rounded">Save</button>
           <button @click="cancel" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
         </div>
       </form>
     </div>
   </div>
 </template>
+
 <script setup>
 import { ref, watch } from 'vue';
-import store from '../store';
+import { useStore } from 'vuex';
 
 const props = defineProps({
   post: Object,
@@ -49,15 +53,16 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'edit']);
 
-const title = ref(props.post ? props.post.title : '');
-const description = ref(props.post ? props.post.description : '');
-const tags = ref(props.post ? props.post.tags : '');
-const media = ref(props.post ? props.post.media : '');
-const location = ref(props.post ? props.post.location : '');
-const audience = ref(props.post ? props.post.audience : 'public');
-const error = ref(''); // For displaying errors
+const title = ref('');
+const description = ref('');
+const tags = ref('');
+const media = ref(null);
+const location = ref('');
+const audience = ref('public');
+const mediaPreview = ref('');
 
-// Watch for changes to props.post and update local state accordingly
+const store = useStore();
+
 watch(() => props.post, (newPost) => {
   if (newPost) {
     title.value = newPost.title;
@@ -65,64 +70,47 @@ watch(() => props.post, (newPost) => {
     tags.value = newPost.tags;
     location.value = newPost.location;
     audience.value = newPost.audience;
+    mediaPreview.value = newPost.media ? `http://localhost:8000${newPost.media}` : '';
   }
-});
+}, { immediate: true });
 
 const handleMediaUpload = (event) => {
   const file = event.target.files[0];
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => {
-  };
-  reader.onerror = (error) => {
-    console.error("Error reading file:", error);
-  };
+  if (file) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      mediaPreview.value = reader.result;
+      media.value = file;
+    };
+    reader.readAsDataURL(file);
+  }
 };
 
-const submitEdit = async () => {
-  const userId = store.state.activeUser?.id;
-  if (!props.post || props.post.user_id !== userId) {
-    error.value = 'Unauthorized user or post data missing.';
-    console.error(error.value);
-    return;
-  }
-
-  const updatedPost = {
-    title: title.value,
-    description: description.value,
-    media: media.value, // Array of file URLs
-    tags: tags.value, // Convert comma-separated tags to an array
-    location: location.value,
-    audience: audience.value
-  };
-
+const handleEdit = async () => {
   try {
-    // Assuming you have an API method to handle the update, replace `apiUpdatePost` with actual API call
-    await apiUpdatePost(updatedPost); 
-    emit('edit', updatedPost);
-    emit('close');
-  } catch (err) {
-    error.value = 'Failed to update the post. Please try again.';
-    console.error(err);
+    const formData = new FormData();
+    formData.append('title', title.value);
+    formData.append('description', description.value);
+    formData.append('tags', tags.value);
+    formData.append('location', location.value);
+    formData.append('audience', audience.value);
+    if (media.value) {
+      formData.append('media', media.value);
+    }
+
+    await store.dispatch('updatePost', { id: props.post.id, data: formData });
+    emit('edit', { id: props.post.id, data: formData });
+    cancel();
+  } catch (error) {
+    console.error('Error editing post:', error);
   }
 };
 
 const cancel = () => {
   emit('close');
 };
-
-const apiUpdatePost = async (post) => {
-  // Replace with actual API call logic
-  return new Promise((resolve, reject) => {
-    // Simulate API call
-    setTimeout(() => {
-      if (Math.random() > 0.1) {
-        resolve();
-      } else {
-        reject(new Error('Simulated API error'));
-      }
-    }, 1000);
-  });
-};
 </script>
 
+<style scoped>
+/* Add any additional styles here */
+</style>

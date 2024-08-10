@@ -6,7 +6,7 @@ const showSidebar = ref(false);
 </script>
 
 <template>
-  <header class="sm:flex flex-col fixed top-0 w-full z-10 mb-10 sm:mb-0">
+  <header class="sm:flex flex-col fixed top-0 w-full z-20 mb-10 sm:mb-0">
     <div class="flex flex-col py-2 sm:py-4 lg:py-0 bg-[#008A8A]">
       <div
         class="flex justify-between px-[6vw] md:py-0 items-center bg-[#008A8A]"

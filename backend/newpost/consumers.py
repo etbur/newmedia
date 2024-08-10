@@ -207,7 +207,7 @@ class PostLikeComment(AsyncWebsocketConsumer):
             await self.fetch_comments(post_id)
         elif action == "edit_post":
             content = data.get("content")
-            await self.edit_post(post_id, username, content)
+            await self.edit_post(post_id, content)
         elif action == "delete_post":
             await self.delete_post(post_id)
 
@@ -285,8 +285,56 @@ class PostLikeComment(AsyncWebsocketConsumer):
             }))
         except Exception as e:
             await self.send_error(f"An error occurred while fetching comments: {str(e)}")
+    async def edit_post(self, post_id, content):
+        if content is None:
+            await self.send(text_data=json.dumps({
+                'error': 'Content cannot be None'
+            }))
+            return
+        if not content.strip():
+            await self.send_error("Post content cannot be empty.")
+            return
 
-    async def edit_post(self, post_id, username, content):
+        try:
+            # user = await database_sync_to_async(get_user_model().objects.get)(username=username)
+            post = await database_sync_to_async(Post.objects.get)(id=post_id)
+
+            # if post.user != user:
+            #     await self.send_error("You are not the owner of this post.")
+            #     return
+
+            post.content = content
+
+            # if media:
+            #     media_file = ContentFile(media, name="uploaded_media")
+            #     post.media.save("media", media_file)
+
+            await database_sync_to_async(post.save)()
+
+            await self.channel_layer.group_send(
+                "post_group",
+                {
+                    "type": "send_edit",
+                    "post": {
+                        "post_id": post_id,
+                        "content": content,
+                        # "media": media,  # Include media in the response if needed
+                        "updated_at": post.updated_at.isoformat(),
+                    }
+                }
+            )
+        except ObjectDoesNotExist:
+            await self.send_error("Post or user does not exist.")
+        except Exception as e:
+            await self.send_error(f"An error occurred while editing post: {str(e)}")
+
+    async def edit_post(self, post_id,username, content):
+              # Check if content is None before using it
+        if content is None:
+            await self.send(text_data=json.dumps({
+                'error': 'Content cannot be None'
+         }))
+            return
         if not content.strip():
             await self.send_error("Post content cannot be empty.")
             return
