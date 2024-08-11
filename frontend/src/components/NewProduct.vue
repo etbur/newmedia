@@ -150,8 +150,8 @@ const handleImageChange = (event) => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-7 mx-[10vw] md:ml-[10vw]">
-    <h2 class="text-[#008a8a] font-medium text-lg">Sell a Product...</h2>
+  <div class="flex flex-col  gap-7 mx-[10vw] md:ml-[10vw] ">
+    <h2 class="text-[#008a8a] font-medium text-lg ">Sell a Product...</h2>
     <form @submit.prevent="createProduct" class="flex flex-col gap-4">
       <div class="flex flex-col gap-4  md:flex-row md:gap-[5%]">
         <input
@@ -184,7 +184,7 @@ const handleImageChange = (event) => {
         />
         <!-- Image preview -->
         <div v-if="imagePreviewUrl" class="mt-3">
-          <img :src="imagePreviewUrl" alt="Image preview" class=" object-cover rounded-md" />
+          <img :src="imagePreviewUrl" alt="Image preview" class=" object-cover rounded-md w-40 h-40" />
         </div>
       </div>
       <div>

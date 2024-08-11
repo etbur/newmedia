@@ -3,8 +3,8 @@ import json
 import logging
 from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Post, Tag, Like, Comment, Follow, Notification
-from .serializers import PostSerializer, NotificationSerializer
+from django.forms import ValidationError
+from .models import Post, Tag, Comment
 from .utils import mark_notification_read, follow_user, unfollow_user
 from django.core.files.base import ContentFile
 from django.contrib.auth.models import User
@@ -12,8 +12,7 @@ from chat_app.models import  Profile
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.contrib.auth import get_user_model
-
-
+from asgiref.sync import sync_to_async
 logger = logging.getLogger(__name__)
 
 class PostCreateConsumer(AsyncWebsocketConsumer):
@@ -173,6 +172,8 @@ class PostFetchConsumer(WebsocketConsumer):
             'username':post.username,
             "profile_picture":post.profile_picture,
         }
+        
+        
 
 class PostLikeComment(AsyncWebsocketConsumer):
     async def connect(self):
@@ -206,8 +207,8 @@ class PostLikeComment(AsyncWebsocketConsumer):
         elif action == "fetch_comments":
             await self.fetch_comments(post_id)
         elif action == "edit_post":
-            content = data.get("content")
-            await self.edit_post(post_id, content)
+            data = data.get("data")
+            await self.edit_post(post_id, data)
         elif action == "delete_post":
             await self.delete_post(post_id)
 
@@ -285,86 +286,70 @@ class PostLikeComment(AsyncWebsocketConsumer):
             }))
         except Exception as e:
             await self.send_error(f"An error occurred while fetching comments: {str(e)}")
-    async def edit_post(self, post_id, content):
-        if content is None:
-            await self.send(text_data=json.dumps({
-                'error': 'Content cannot be None'
-            }))
-            return
-        if not content.strip():
-            await self.send_error("Post content cannot be empty.")
-            return
 
+    async def edit_post(self, post_id, data, media_data=None):
         try:
-            # user = await database_sync_to_async(get_user_model().objects.get)(username=username)
+        # Retrieve the post instance
             post = await database_sync_to_async(Post.objects.get)(id=post_id)
+            logger.info(post)
+        
+        # Update the post fields
+            if "title" in data:
+                post.title = data["title"]
+            if "description" in data:
+                post.description = data["description"]
+            if "location" in data:
+                post.location = data["location"]
+            if "audience" in data:
+                post.audience = data["audience"]
 
-            # if post.user != user:
-            #     await self.send_error("You are not the owner of this post.")
-            #     return
+        # Handle the media file if provided
+            if media_data:
+                format, imgstr = media_data.split(';base64,')
+                ext = format.split('/')[-1]
+                media_file = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
 
-            post.content = content
+            # Debug logging
+                logger.info(f"Saving media file: {media_file.name}")
 
-            # if media:
-            #     media_file = ContentFile(media, name="uploaded_media")
-            #     post.media.save("media", media_file)
+                post.media.save(media_file.name, media_file)
+        
+        # Handle the tags (ManyToManyField)
+            if "tags" in data:
+                tags = data["tags"]
+                try:
+                    tag_objects = await database_sync_to_async(lambda: [Tag.objects.get(name=tag) for tag in tags])()
+                    await database_sync_to_async(post.tags.set)(tag_objects)  # Use the set() method
+                except Tag.DoesNotExist as e:
+                    raise ValidationError(f"One or more tags do not exist: {e}")
 
+        # Save the post
             await database_sync_to_async(post.save)()
 
+        # Send a confirmation message back to the client
             await self.channel_layer.group_send(
                 "post_group",
                 {
                     "type": "send_edit",
                     "post": {
-                        "post_id": post_id,
-                        "content": content,
-                        # "media": media,  # Include media in the response if needed
-                        "updated_at": post.updated_at.isoformat(),
+                        "id": post.id,
+                        "title": post.title,
+                        "description": post.description,
+                        "tags": [tag.name for tag in post.tags.all()],
+                        "media": post.media.url if post.media else None,
+                        "location": post.location,
+                        "audience": post.audience,
+                        "updated_at": post.updated_at.isoformat()
                     }
                 }
             )
         except ObjectDoesNotExist:
-            await self.send_error("Post or user does not exist.")
+            logger.error(f"Post {post_id} does not exist.")
+        except ValidationError as e:
+            logger.error(str(e))
         except Exception as e:
-            await self.send_error(f"An error occurred while editing post: {str(e)}")
+            logger.error(f"An unexpected error occurred while editing post: {str(e)}")
 
-    async def edit_post(self, post_id,username, content):
-              # Check if content is None before using it
-        if content is None:
-            await self.send(text_data=json.dumps({
-                'error': 'Content cannot be None'
-         }))
-            return
-        if not content.strip():
-            await self.send_error("Post content cannot be empty.")
-            return
-
-        try:
-            user = await database_sync_to_async(get_user_model().objects.get)(username=username)
-            post = await database_sync_to_async(Post.objects.get)(id=post_id)
-
-            if post.user != user:
-                await self.send_error("You are not the owner of this post.")
-                return
-
-            post.content = content
-            await database_sync_to_async(post.save)()
-
-            await self.channel_layer.group_send(
-                "post_group",
-                {
-                    "type": "send_edit",
-                    "post": {
-                        "post_id": post_id,
-                        "content": content,
-                        "updated_at": post.updated_at.isoformat(),
-                    }
-                }
-            )
-        except ObjectDoesNotExist:
-            await self.send_error("Post or user does not exist.")
-        except Exception as e:
-            await self.send_error(f"An error occurred while editing post: {str(e)}")
 
     async def delete_post(self, post_id):
         try:
@@ -405,7 +390,8 @@ class PostLikeComment(AsyncWebsocketConsumer):
     async def send_edit(self, event):
         await self.send(text_data=json.dumps({
             "type": "edit_post",
-            "post": event["post"]
+            "post": event["post"],
+             "data": event["data"]
         }))
 
     async def send_delete(self, event):
@@ -419,3 +405,4 @@ class PostLikeComment(AsyncWebsocketConsumer):
             "type": "error",
             "error": error_message
         }))
+

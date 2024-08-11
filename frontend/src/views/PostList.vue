@@ -380,7 +380,7 @@ onUnmounted(() => {
     <!-- Posts Section -->
     <div class="grid grid-col-2 sm:grid-cols-1 gap-8 bg-[#f4f4f4] py-6">
       <div
-        class="bg-[#ffffff] grid grid-cols-1 mx-8 px-6 rounded-md w-full sm:w-[35vw] transition-transform transform hover:scale-105 shadow-md"
+        class="bg-[#ffffff] grid grid-cols-1 mx-8 px-6 rounded-md  sm:w-[35vw] transition-transform transform hover:scale-105 shadow-md w-[80%]"
         v-for="post in formattedPosts"
         :key="post.id"
       >
@@ -467,7 +467,7 @@ onUnmounted(() => {
             "
             :src="`http://localhost:8000${post.media}`"
             alt="post img"
-            class="rounded-lg object-cover h-[45vh]"
+            class="rounded-lg object-cover h-[30vh] w-[30vw] "
           />
           <video
             v-else-if="

@@ -3,6 +3,7 @@
     <div class="bg-white p-6 rounded-lg shadow-lg w-[50vw]">
       <h3 class="text-lg font-semibold mb-4">Edit Post</h3>
       <form @submit.prevent="handleEdit">
+        <!-- Form fields -->
         <div class="mb-4">
           <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
           <input v-model="title" id="title" type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required />
@@ -33,9 +34,10 @@
             <option value="private">Private</option>
           </select>
         </div>
+        <div v-if="errorMessage" class="mb-4 text-red-500">{{ errorMessage }}</div>
         <div class="flex justify-end gap-4">
           <button type="submit" class="bg-[#C59728] text-white px-4 py-2 rounded">Save</button>
-          <button @click="cancel" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+          <button @click.prevent="cancel" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
         </div>
       </form>
     </div>
@@ -43,36 +45,58 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { useStore } from 'vuex';
+import { ref, onUnmounted, onMounted } from 'vue';
 
 const props = defineProps({
   post: Object,
   show: Boolean
 });
 
-const emit = defineEmits(['close', 'edit']);
-
-const title = ref('');
-const description = ref('');
-const tags = ref('');
+const title = ref(props.post?.title || '');
+const description = ref(props.post?.description || '');
+const tags = ref(props.post?.tags || '');
 const media = ref(null);
-const location = ref('');
-const audience = ref('public');
-const mediaPreview = ref('');
+const mediaPreview = ref(props.post?.media || '');
+const location = ref(props.post?.location || '');
+const audience = ref(props.post?.audience || 'public');
+const emit = defineEmits();
 
-const store = useStore();
+const socket = ref(null);
+const errorMessage = ref('');
 
-watch(() => props.post, (newPost) => {
-  if (newPost) {
-    title.value = newPost.title;
-    description.value = newPost.description;
-    tags.value = newPost.tags;
-    location.value = newPost.location;
-    audience.value = newPost.audience;
-    mediaPreview.value = newPost.media ? `http://localhost:8000${newPost.media}` : '';
-  }
-}, { immediate: true });
+const openWebSocket = () => {
+  socket.value = new WebSocket('ws://localhost:8000/ws/PostLikeComment'); 
+
+  socket.value.onopen = () => {
+    console.log('WebSocket connection established.');
+    errorMessage.value = '';
+  };
+
+  socket.value.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log('Received message:', data);
+    if (data.type === 'error') {
+      errorMessage.value = data.error;
+    } else {
+      errorMessage.value = '';
+    }
+  };
+
+  socket.value.onerror = (error) => {
+    console.error('WebSocket error:', error);
+    errorMessage.value = 'WebSocket error occurred. Please try again later.';
+  };
+
+  socket.value.onclose = (event) => {
+    console.log('WebSocket connection closed.', event);
+    if (event.wasClean) {
+      console.log('Connection closed cleanly.');
+    } else {
+      console.error('Connection died.');
+      errorMessage.value = 'WebSocket connection was closed unexpectedly. Please try again later.';
+    }
+  };
+};
 
 const handleMediaUpload = (event) => {
   const file = event.target.files[0];
@@ -86,31 +110,79 @@ const handleMediaUpload = (event) => {
   }
 };
 
-const handleEdit = async () => {
-  try {
-    const formData = new FormData();
-    formData.append('title', title.value);
-    formData.append('description', description.value);
-    formData.append('tags', tags.value);
-    formData.append('location', location.value);
-    formData.append('audience', audience.value);
-    if (media.value) {
-      formData.append('media', media.value);
-    }
+// const handleEdit = () => {
+//   if (!socket.value || socket.value.readyState !== WebSocket.OPEN) {
+//     errorMessage.value = 'WebSocket connection is not open. Please try again later.';
+//     console.error('WebSocket connection is not open.');
+//     return;
+//   }
 
-    await store.dispatch('updatePost', { id: props.post.id, data: formData });
-    emit('edit', { id: props.post.id, data: formData });
-    cancel();
+//   const data = {
+//     action: 'edit_post',
+//     post_id: props.post?.id, // Ensure post ID is included
+//     data: {
+//       title: title.value,
+//       description: description.value,
+//       tags: tags.value, // Ensure tags are formatted properly
+//       media: media.value ? media.value.name : mediaPreview.value,
+//       location: location.value,
+//       audience: audience.value
+//     }
+//   };
+  
+//   try {
+//     socket.value.send(JSON.stringify(data));
+//     errorMessage.value = '';
+//     cancel(); 
+//   } catch (error) {
+//     errorMessage.value = 'Failed to send data. Please try again.';
+//     console.error('Failed to send data:', error);
+//   }
+// };
+
+const handleEdit = () => {
+  if (!socket.value || socket.value.readyState !== WebSocket.OPEN) {
+    errorMessage.value = 'WebSocket connection is not open. Please try again later.';
+    console.error('WebSocket connection is not open.');
+    return;
+  }
+
+  const data = {
+    action: 'edit_post',
+    post_id: props.post?.id, // Ensure post ID is included
+    data: {
+      title: title.value,
+      description: description.value,
+      tags: tags.value, // Split and trim tags
+      media: media.value ? mediaPreview.value : null, // Send base64 string or null
+      location: location.value,
+      audience: audience.value
+    }
+  };
+  
+  try {
+    socket.value.send(JSON.stringify(data));
+    errorMessage.value = '';
+    console.log(data)
+    cancel(); 
   } catch (error) {
-    console.error('Error editing post:', error);
+    errorMessage.value = 'Failed to send data. Please try again.';
+    console.error('Failed to send data:', error);
   }
 };
+
 
 const cancel = () => {
   emit('close');
 };
-</script>
 
-<style scoped>
-/* Add any additional styles here */
-</style>
+onMounted(() => {
+  openWebSocket();
+});
+
+onUnmounted(() => {
+  if (socket.value) {
+    socket.value.close();
+  }
+});
+</script>
