@@ -32,7 +32,8 @@ const router = createRouter({
         {
           path: 'chat',
           name: 'chat',
-          component: ChatApp
+          component: ChatApp,
+          meta: { sidebar: false }
         },
         {
           path: 'postlist',
