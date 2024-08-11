@@ -6,6 +6,9 @@ import { format } from "date-fns";
 import avatar from "../assets/avatar.png";
 import { Icon } from "@iconify/vue";
 import store from "@/store";
+import 'toastr/build/toastr.min.css';
+import toastr from 'toastr';
+
 
 const router = useRouter();
 
@@ -335,10 +338,12 @@ const deletePost = (postId) => {
             post_id: postId,
           })
         );
-        // alert('post Successfull deleted!')
+        toastr.success('A post  deleted succes!');
         connectFetchWebSocket();
+
       } catch (error) {
         console.error("Error sending delete request:", error);
+        toastr.error('Post not deleted!');
       }
     }
   } else {
@@ -372,7 +377,6 @@ onUnmounted(() => {
   }
 });
 </script>
-
 <template>
   <div
     class="flex flex-col lg:flex-row items-center md:items-start justify-evenly gap-[5vw] md:mx-[3vw]"
@@ -380,7 +384,7 @@ onUnmounted(() => {
     <!-- Posts Section -->
     <div class="grid grid-col-2 sm:grid-cols-1 gap-8 bg-[#f4f4f4] py-6">
       <div
-        class="bg-[#ffffff] grid grid-cols-1 mx-8 px-6 rounded-md  sm:w-[35vw] transition-transform transform hover:scale-105 shadow-md w-[80%]"
+        class="bg-[#ffffff] grid grid-cols-1 mx-8 px-6 rounded-md  sm:w-[35vw]  shadow-sm w-[80%]"
         v-for="post in formattedPosts"
         :key="post.id"
       >
