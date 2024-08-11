@@ -56,6 +56,7 @@ import UserList from "./particals/leftbar/UserList.vue";
 import MessageWindow from "./particals/rightbar/MessageWindow.vue";
 import {store} from "./store";
 import axios from "../../../axios";
+// import '../../../styles/main.scss'
 
 export default {
   name: "ChatApp",
