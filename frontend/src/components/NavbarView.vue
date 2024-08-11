@@ -59,7 +59,7 @@ const showSidebar = ref(false);
             icon="mdi:account-group"
           />
         </RouterLink>
-        <RouterLink to="app/message">
+        <RouterLink to="/app/chat">
           <Icon
             class="w-4 h-4 sm:w-6 sm:h-6 transition-transform duration-300 ease-in-out transform hover:scale-125 hover:rotate-12 hover:text-[#C59728] router-link-active:scale-125 router-link-active:rotate-12 router-link-active:text-[#008a8a]"
             icon="mdi:chat"

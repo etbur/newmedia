@@ -14,6 +14,7 @@ from channels.auth import AuthMiddlewareStack
 from channels.security.websocket import AllowedHostsOriginValidator, OriginValidator
 import  newpost.routing 
 import marketplace.routing
+import chat_app.ws_urls
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 
 application = ProtocolTypeRouter({
@@ -21,7 +22,7 @@ application = ProtocolTypeRouter({
     "websocket":AllowedHostsOriginValidator(
       AuthMiddlewareStack(
         URLRouter(
-           newpost.routing.websocket_urlpatterns+ marketplace.routing.websocket_urlpatterns
+           newpost.routing.websocket_urlpatterns+ marketplace.routing.websocket_urlpatterns+ chat_app.ws_urls.websocket_urlpatterns
         ))
     )
 })

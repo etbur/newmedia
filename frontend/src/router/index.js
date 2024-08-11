@@ -7,6 +7,7 @@ import PostList from '../views/PostList.vue'
 import Login from '../views/auth/Login.vue'
 import ProductList from '@/views/ProductList.vue'
 import BuyProduct from '@/components/BuyProduct.vue'
+import ChatApp from '@/views/app/chat-app/ChatApp.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +29,11 @@ const router = createRouter({
       path: '/app', // A base path for authenticated routes
       component: () => import('../views/auth/Layout.vue'),
       children: [
+        {
+          path: 'chat',
+          name: 'chat',
+          component: ChatApp
+        },
         {
           path: 'postlist',
           name: 'postlist',
