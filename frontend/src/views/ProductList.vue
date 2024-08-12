@@ -272,12 +272,175 @@ const showLess = () => {
 };
 </script>
 <template>
-  <div class="flex">
+  <div class="flex flex-col  ">
     <!-- Filter Sidebar -->
-    <div class="shadow-md px-4 h-[78vh] pb-20 flex flex-col gap-6 overflow-y-scroll fixed left-[3vw] bg-white z-10 w-full sm:w-64 lg:w-80">
+    <!-- Sidebar for Extra Small Screens -->
+    <div class="block  mx-[10vw] sm:hidden">
+      <div class="flex gap-4">
+        <!-- Filter Dropdown -->
+        <div class="flex flex-col">
+          <button
+            @click="toggleDropdown('filter')"
+            class="px-4 py-1 rounded-sm font-medium text-sm text-[#008A8A] flex gap-2 items-center border"
+          >
+            Filter
+            <svg
+              class="w-4 h-4 ml-2 transform transition-transform duration-200"
+              :class="{ 'rotate-180': dropdowns.filter }"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </button>
+          <div v-show="dropdowns.filter" class="p-4">
+            <div class="py-2">
+              <div class="flex flex-col gap-2 py-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-gray-700">Rating</span>
+                  <input
+                    type="number"
+                    v-model.number="minRating"
+                    placeholder="min"
+                    class="w-16 py-1 px-2 border rounded-sm"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                  />
+                  <input
+                    type="number"
+                    v-model.number="maxRating"
+                    placeholder="max"
+                    class="w-16 border py-1 px-2 rounded-sm"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                  />
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-gray-700">Location</span>
+                  <input
+                    type="text"
+                    v-model="location"
+                    placeholder="location"
+                    class="border py-1 px-2 rounded-sm"
+                  />
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-gray-700">Price</span>
+                  <input
+                    type="number"
+                    v-model.number="minPrice"
+                    placeholder="min"
+                    class="w-16 py-1 px-2 border rounded-sm"
+                    min="0"
+                  />
+                  <input
+                    type="number"
+                    v-model.number="maxPrice"
+                    placeholder="max"
+                    class="w-16 border py-1 px-2 rounded-sm"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sell Dropdown -->
+        <div>
+          <button
+            @click="toggleDropdown('sell')"
+            class="px-4 py-1 border rounded-sm text-sm font-medium text-[#008A8A] flex gap-2 items-center"
+          >
+            Sell
+            <svg
+              class="w-4 h-4 ml-2 transform transition-transform duration-200"
+              :class="{ 'rotate-180': dropdowns.sell }"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </button>
+          <div v-show="dropdowns.sell" class="p-4">
+            <router-link
+              to="/app/newproduct"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-sm"
+              role="menuitem"
+              @click.prevent="addProduct"
+            >
+              Add New Product
+            </router-link>
+            <router-link
+              to="/app/buyproduct"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-sm"
+              role="menuitem"
+            >
+              Buy Product
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Categories Dropdown -->
+        <div>
+          <button
+            @click="toggleDropdown('categories')"
+            class="px-4 py-1 rounded-sm  border text-sm font-medium text-[#008A8A] flex gap-2 items-center"
+          >
+            Categories
+            <svg
+              class="w-4 h-4 ml-2 transform transition-transform duration-200"
+              :class="{ 'rotate-180': dropdowns.categories }"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </button>
+          <div v-show="dropdowns.categories" class="p-4">
+            <a
+              v-for="category in categories"
+              :key="category.id"
+              class="block px-4 py-2 text-sm text-gray-700 capitalize hover:bg-gray-100 hover:text-gray-900 rounded-sm"
+              role="menuitem"
+              @click.prevent="showCategory(category.name)"
+            >
+              {{ category.name }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+ <div class="hidden sm:block">
+  <div
+      class="px-4 h-[500px] pb-20 flex  flex-col gap-6 overflow-y-scroll fixed left-[3vw] bg-white z-10 w-full sm:w-64 lg:w-80"
+    >
       <!-- Filter -->
-      <div class="border-b py-2">
-        <h1 class="text-[#008A8A] font-semibold text-lg">Filter</h1>
+      <div class=" py-2">
+        <h1 class="text-[#008A8A] font-semibold ">Filter</h1>
         <div class="py-2" role="none">
           <div class="flex flex-col gap-2 py-1">
             <div class="flex items-center gap-2">
@@ -330,10 +493,10 @@ const showLess = () => {
           </div>
         </div>
       </div>
-      
+
       <!-- Sell Action -->
       <div class="border-t py-2">
-        <h1 class="text-[#008a8a] font-semibold text-lg">Sell</h1>
+        <h1 class="text-[#008a8a] font-semibold ">Sell</h1>
         <div class="py-2" role="none">
           <router-link
             to="/app/newproduct"
@@ -352,10 +515,10 @@ const showLess = () => {
           </router-link>
         </div>
       </div>
-      
+
       <!-- Categories -->
       <div class="border-t py-2">
-        <h1 class="text-[#008a8a] font-semibold text-lg">Categories</h1>
+        <h1 class="text-[#008a8a] font-semibold ">Categories</h1>
         <div class="py-2" role="none">
           <a
             v-for="category in categories"
@@ -370,7 +533,9 @@ const showLess = () => {
       </div>
     </div>
 
-    <!-- Product List -->
+ </div>
+
+    <!-- Product  -->
     <div class="flex-1 ml-0 sm:ml-64 lg:ml-80 p-4">
       <div
         v-if="products.length > 0"
@@ -435,7 +600,10 @@ const showLess = () => {
       </div>
 
       <!-- No Products Available -->
-      <div v-else class="flex justify-center items-center text-xl font-medium mt-8 text-[#008a8a]">
+      <div
+        v-else
+        class="flex justify-center items-center text-xl font-medium mt-8 text-[#008a8a]"
+      >
         No products available!
       </div>
 
