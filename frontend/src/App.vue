@@ -37,7 +37,7 @@ const route = useRoute();
     <main class="mt-[17vh] hidden md:block">
       <Sidebar v-if="route.meta.sidebar" class="md:fixed left-[7vw]" />
     </main>
-    <div v-if="!route.meta.sidebar" class="w-full mx-14 mt-[30vh] sm:mt-[22vh] ">
+    <div v-if="!route.meta.sidebar" class=" mt-[30vh] sm:mt-[22vh] ">
         <RouterView />
     </div>
     <div v-if="route.meta.sidebar" class="mt-[30vh] sm:mt-[22vh] md:ml-[20vw] lg:ml-[19vw] md:mr-[4vw]">

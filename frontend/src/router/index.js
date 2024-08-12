@@ -51,7 +51,7 @@ const router = createRouter({
           path: 'marketplace',
           name: 'marketplace',
           component: ProductList,
-          meta: { sidebar: true }
+          meta: { sidebar: false }
         },
         {
           path: 'newproduct',

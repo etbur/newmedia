@@ -271,106 +271,22 @@ const showLess = () => {
   );
 };
 </script>
-
 <template>
-  <div class="md:mx-[2vw]">
-    <div class="flex flex-wrap ml-[8vw] md:mx-0 md:justify-end gap-6 mb-3">
-      <!-- Dropdowns for actions -->
-      <div class="relative inline-block text-left">
-        <div>
-          <button
-            @click="toggleDropdown('sell')"
-            class="inline-flex justify-center w-full rounded-md border border-[#D9D9D9] text-[#008A8A] font-medium shadow-sm px-4 py-1 bg-white text-sm hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#D9D9D9]"
-            type="button"
-          >
-            Sell
-            <svg
-              class="-mr-1 ml-2 h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
-        </div>
-        <div
-          v-show="dropdowns.sell"
-          class="origin-top-right z-10 absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
-          role="menu"
-          aria-orientation="vertical"
-          aria-labelledby="menu-button"
-        >
-          <div class="py-1" role="none">
-            <router-link
-              to="/app/newproduct"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              role="menuitem"
-              @click.prevent="addProduct"
-            >
-              Add New Product
-            </router-link>
-            <router-link
-              href="#"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              role="menuitem"
-              to="/app/buyproduct"
-            >
-              Buy Product
-            </router-link>
-          </div>
-        </div>
-      </div>
-
-      <!-- Filter Dropdown -->
-      <div class="relative inline-block text-left">
-        <div>
-          <button
-            @click="toggleDropdown('filter')"
-            class="inline-flex justify-center w-full rounded-md border border-[#D9D9D9] text-[#008A8A] font-medium shadow-sm px-4 py-1 bg-white text-sm hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#008A8A]"
-            type="button"
-          >
-            Filter
-            <svg
-              class="-mr-1 ml-2 h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
-        </div>
-        <div
-          v-show="dropdowns.filter"
-          class="origin-top-right z-10 absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
-          role="menu"
-          aria-orientation="vertical"
-          aria-labelledby="menu-button"
-        >
-          <div class="py-1 " role="none">
-            <a
-              href="#"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 "
-              role="menuitem"
-              @click.prevent="applyFilters"
-            >
-              Rating
+  <div class="flex">
+    <!-- Filter Sidebar -->
+    <div class="shadow-md px-4 h-[78vh] pb-20 flex flex-col gap-6 overflow-y-scroll fixed left-[5vw] bg-white z-10 w-full sm:w-64 lg:w-80">
+      <!-- Filter -->
+      <div class="border-b py-2">
+        <h1 class="text-[#008A8A] font-semibold text-lg">Filter</h1>
+        <div class="py-2" role="none">
+          <div class="flex flex-col gap-2 py-1">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-700">Rating</span>
               <input
                 type="number"
                 v-model.number="minRating"
                 placeholder="min"
-                class="w-16 py-1 px-2 ml-2 border"
+                class="w-16 py-1 px-2 border rounded-sm"
                 min="0"
                 max="5"
                 step="0.1"
@@ -379,196 +295,176 @@ const showLess = () => {
                 type="number"
                 v-model.number="maxRating"
                 placeholder="max"
-                class="w-16 border py-1 px-2"
+                class="w-16 border py-1 px-2 rounded-sm"
                 min="0"
                 max="5"
                 step="0.1"
               />
-            </a>
-            <a
-              href="#"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              role="menuitem"
-              @click.prevent="applyFilters"
-            >
-              Location
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-700">Location</span>
               <input
                 type="text"
                 v-model="location"
                 placeholder="location"
-                class="border py-1 px-2 my-2"
+                class="border py-1 px-2 rounded-sm"
               />
-            </a>
-            <a
-              href="#"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              role="menuitem"
-              @click.prevent="applyFilters"
-            >
-              Price
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-700">Price</span>
               <input
                 type="number"
                 v-model.number="minPrice"
                 placeholder="min"
-                class="w-16 py-1 px-2 ml-2  border"
+                class="w-16 py-1 px-2 border rounded-sm"
                 min="0"
               />
               <input
                 type="number"
                 v-model.number="maxPrice"
                 placeholder="max"
-                class="w-16 border py-1 px-2"
+                class="w-16 border py-1 px-2 rounded-sm"
                 min="0"
               />
-            </a>
+            </div>
           </div>
         </div>
       </div>
-
-      <!-- Category Dropdown -->
-      <div class="relative inline-block text-left">
-        <div>
-          <button
-            @click="toggleDropdown('category')"
-            class="inline-flex justify-center w-full rounded-md border border-[#D9D9D9] text-[#008A8A] font-medium shadow-sm px-4 py-1 bg-white text-sm hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#008A8A]"
-            type="button"
+      
+      <!-- Sell Action -->
+      <div class="border-t py-2">
+        <h1 class="text-[#008a8a] font-semibold text-lg">Sell</h1>
+        <div class="py-2" role="none">
+          <router-link
+            to="/app/newproduct"
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-sm"
+            role="menuitem"
+            @click.prevent="addProduct"
           >
-            Categories
-            <svg
-              class="-mr-1 ml-2 h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
+            Add New Product
+          </router-link>
+          <router-link
+            to="/app/buyproduct"
+            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-sm"
+            role="menuitem"
+          >
+            Buy Product
+          </router-link>
         </div>
-        <div
-          v-show="dropdowns.category"
-          class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
-          role="menu"
-          aria-orientation="vertical"
-          aria-labelledby="menu-button"
-        >
-          <div class="py-1" role="none">
-            <a
-              href="#"
-              v-for="category in categories"
-              :key="category.id"
-              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              role="menuitem"
-              @click.prevent="showCategory(category.name)"
-            >
-              {{ category.name }}
-            </a>
-          </div>
+      </div>
+      
+      <!-- Categories -->
+      <div class="border-t py-2">
+        <h1 class="text-[#008a8a] font-semibold text-lg">Categories</h1>
+        <div class="py-2" role="none">
+          <a
+            v-for="category in categories"
+            :key="category.id"
+            class="block px-4 py-2 text-sm text-gray-700 capitalize hover:bg-gray-100 hover:text-gray-900 rounded-sm"
+            role="menuitem"
+            @click.prevent="showCategory(category.name)"
+          >
+            {{ category.name }}
+          </a>
         </div>
       </div>
     </div>
-    <!-- Display Product List -->
-    <div
-      v-if="products.length > 0"
-      class="grid items-center mx-[8%] sm:mx-[6%] md:mx-6 lg:mx-8 xl:mx-12  sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-16 mt-8 sm:mt-12 lg:mt-16"
-    >
+
+    <!-- Product List -->
+    <div class="flex-1 ml-0 sm:ml-64 lg:ml-80 p-4">
       <div
-        v-for="(product, index) in products.slice(0, displayedProductsCount)"
-        :key="product.id"
-        class="bg-white flex flex-col gap-4 rounded-lg shadow-lg p-4 sm:p-6 transition-transform transform hover:scale-105  w-[80%] sm:w-full"
+        v-if="products.length > 0"
+        class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 ml-[10vw] mr-[4vw]"
       >
-        <!-- Seller Info -->
-        <div class="flex flex-col gap-2">
-          
-          <div class="flex items-center gap-3 sm:gap-4">
-            <img
-              :src="product.seller_profile_picture || avatar"
-              v-bind:alt="alt"
-              class="w-6 h-6 rounded-full "
-            />
-            <p class="sm:text-base text-sm">
-              {{ product.seller_profile_name }}
+        <div
+          v-for="(product, index) in products.slice(0, displayedProductsCount)"
+          :key="product.id"
+          class="bg-white flex flex-col gap-4 rounded-lg shadow-lg p-4 transition-transform transform hover:scale-105"
+        >
+          <!-- Seller Info -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 sm:gap-4">
+              <img
+                :src="product.seller_profile_picture || avatar"
+                v-bind:alt="alt"
+                class="w-8 h-8 rounded-full"
+              />
+              <p class="text-sm sm:text-base">
+                {{ product.seller_profile_name }}
+              </p>
+            </div>
+            <p class="text-gray-600 text-sm">
+              {{ product.created_at }}
             </p>
           </div>
-          <p class="text-gray-600 text-sm">
-            {{ product.created_at }}
-          </p>
-        </div>
-        <h3 class="sm:text-lg font-medium capitalize">
+          <h3 class="text-base sm:text-lg font-medium capitalize">
             {{ product.name }}
           </h3>
-        <!-- Product Image -->
-        <div class="flex ">
-          <img
-            :src="`http://localhost:8000${product.image}`"
-            alt="Product Image"
-            class="  w-full h-60 sm:h-48 object-cover rounded-lg "
-          />
-        </div>
-
-        <!-- Product Details -->
-        <div class="flex flex-col gap-3 sm:gap-4">
-         
-          <p class="text-gray-900 text-base ">
-            {{ product.price }} Br
-          </p>
-          <div
-            class="flex flex-wrap sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4"
-          >
-            <StarRating
-              :rating="product.rating"
-              @rating-changed="updateProductRating(product.id, $event)"
+          <!-- Product Image -->
+          <div class="flex">
+            <img
+              :src="`http://localhost:8000${product.image}`"
+              alt="Product Image"
+              class="w-full h-48 sm:h-60 object-cover rounded-lg"
             />
-            <router-link
-              class="text-teal-500 hover:underline px-2 py-1 rounded-md flex gap-2"
-              @click.prevent="updateViewCount(product.id)"
-            >
-              {{ product.views }} <span>Views</span>
-            </router-link>
-            <button
-              class="text-teal-500 hover:underline px-2 py-1 rounded-md"
-              @click="openModal(product)"
-            >
-              Detail
-            </button>
+          </div>
+
+          <!-- Product Details -->
+          <div class="flex flex-col gap-3">
+            <p class="text-gray-900 text-base">{{ product.price }} Br</p>
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <StarRating
+                :rating="product.rating"
+                @rating-changed="updateProductRating(product.id, $event)"
+              />
+              <router-link
+                class="text-teal-500 hover:underline px-2 py-1 rounded-md flex gap-2"
+                @click.prevent="updateViewCount(product.id)"
+              >
+                {{ product.views }} <span>Views</span>
+              </router-link>
+              <button
+                class="text-teal-500 hover:underline px-2 py-1 rounded-md"
+                @click="openModal(product)"
+              >
+                Detail
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- No Products Available -->
-    <div v-else class="text-xl font-medium mt-[2vh]  text-[#008a8a] ">
-      No products available !
-    </div>
+      <!-- No Products Available -->
+      <div v-else class="flex justify-center items-center text-xl font-medium mt-8 text-[#008a8a]">
+        No products available!
+      </div>
 
-    <!-- Product Detail Modal -->
-    <ProductDetailModal
-      :isOpen="showModal"
-      :product="selectedProduct"
-      @close="closeModal"
-    />
+      <!-- Load More / Show Less Buttons -->
+      <div class="flex justify-end mt-8 pb-4 mr-[4vw]">
+        <button
+          v-if="displayedProductsCount < products.length"
+          @click="loadMore"
+          class="px-4 py-2 bg-[#008a8a] text-white rounded-lg hover:bg-[#C59728]"
+        >
+          Load More...
+        </button>
+        <button
+          v-if="displayedProductsCount > initialProductsCount"
+          @click="showLess"
+          class="px-4 py-2 bg-[#008a8a] text-white rounded-lg hover:bg-[#C59728] ml-2"
+        >
+          Show Less
+        </button>
+      </div>
+    </div>
   </div>
 
-    <!-- Load More / Show Less Buttons -->
-    <div class="flex justify-end mt-8 pb-4 mx-[6%]" >
-      <button
-        v-if="displayedProductsCount < products.length"
-        @click="loadMore"
-        class="px-4 py-2 bg-[#008a8a] text-white rounded-lg hover:bg-[#C59728]"
-      >
-        Load More
-      </button>
-      <button
-        v-if="displayedProductsCount > initialProductsCount"
-        @click="showLess"
-        class="px-4 py-2 bg-[#008a8a] text-white rounded-lg hover:bg-[#C59728] ml-2"
-      >
-        Show Less
-      </button>
-    </div>
+  <!-- Product Detail Modal -->
+  <ProductDetailModal
+    :isOpen="showModal"
+    :product="selectedProduct"
+    @close="closeModal"
+  />
 </template>
+
 

@@ -44,7 +44,7 @@ const showSidebar = ref(false);
 
     <!-- Main Navigation -->
     <nav
-      class="flex flex-col gap-5 sm:flex-row sm:gap-10  bg-[#F1F1F1] justify-between items-center px-[7vw] shadow-md py-2"
+      class="flex flex-col gap-5 sm:flex-row sm:gap-10  bg-[#F1F1F1] justify-between items-center px-[6.3%] shadow-md py-2"
     >
       <div class="flex gap-6 sm:gap-11">
         <RouterLink to="/app/friends" >
