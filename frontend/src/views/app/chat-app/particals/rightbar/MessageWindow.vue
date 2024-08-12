@@ -1,7 +1,7 @@
 <template>
   <section v-if="selected_user">
     <active-user :user="selected_user"></active-user>
-    <router-link to="/postpage">post</router-link>
+    <router-link to="/app/postlist">post</router-link>
     <div class="chat-body" ref="chatBody">
       <div v-for="message in selected_user.messages" class="chat-message" :class="message.sender !== selected_user.username ? 'right': 'left'">
         <div class="actions">

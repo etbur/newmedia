@@ -539,7 +539,7 @@ const showLess = () => {
     <div class="flex-1 ml-0 sm:ml-64 lg:ml-80 p-4">
       <div
         v-if="products.length > 0"
-        class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 ml-[10vw] mr-[3vw]"
+        class="grid gap-14 md:grid-cols-2 lg:grid-cols-3  ml-[10vw] "
       >
         <div
           v-for="(product, index) in products.slice(0, displayedProductsCount)"

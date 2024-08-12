@@ -8,6 +8,8 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from chat_app.models import Message, Group, GroupMember, ChatMessage, FileUpload, Share, Student
+from newpost.models import Post, Tag, Like, Comment,Notification,Follow
+
 
 class MessageSerializer(serializers.Serializer):
     text = serializers.CharField()
@@ -120,20 +122,20 @@ class RegistrationSerializer(serializers.ModelSerializer):
             }
         )
 
-# class CommentSerializer(serializers.ModelSerializer):
-#     user = UserSerializer(read_only=True)
+class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
 
-#     class Meta:
-#         model = Comment
-#         fields = ['id', 'user', 'post', 'content', 'created_at', 'updated_at']
+    class Meta:
+        model = Comment
+        fields = ['id', 'user', 'post', 'content', 'created_at', 'updated_at']
 
-# class PostSerializer(serializers.ModelSerializer):
-#     user = UserSerializer(read_only=True)
-#     comments = CommentSerializer(many=True, read_only=True)
+class PostSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
 
-#     class Meta:
-#         model = Post
-#         fields = ['id', 'user', 'content', 'created_at', 'updated_at', 'comments']
+    class Meta:
+        model = Post
+        fields = ['id', 'user', 'content', 'created_at', 'updated_at', 'comments']
 
 
 # group
@@ -161,12 +163,12 @@ class FileUploadSerializer(serializers.ModelSerializer):
         
 
 #  social Post
-# class CommentSerializer(serializers.ModelSerializer):
-#     user = serializers.ReadOnlyField(source='user.username')
+class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
 
-#     class Meta:
-#         model = Comment
-#         fields = ('id', 'user', 'content', 'created_at')
+    class Meta:
+        model = Comment
+        fields = ('id', 'user', 'content', 'created_at')
 
 class ShareSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
@@ -175,18 +177,18 @@ class ShareSerializer(serializers.ModelSerializer):
         model = Share
         fields = ('id', 'user', 'created_at')
 
-# class PostSerializer(serializers.ModelSerializer):
-#     user = serializers.ReadOnlyField(source='user.username')
-#     likes_count = serializers.SerializerMethodField()
-#     comments = CommentSerializer(many=True, read_only=True)
-#     shares = ShareSerializer(many=True, read_only=True)
+class PostSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+    likes_count = serializers.SerializerMethodField()
+    comments = CommentSerializer(many=True, read_only=True)
+    shares = ShareSerializer(many=True, read_only=True)
 
-#     class Meta:
-#         model = Post
-#         fields = ('id', 'user', 'content', 'created_at', 'updated_at', 'likes_count', 'likes', 'comments', 'shares')
+    class Meta:
+        model = Post
+        fields = ('id', 'user', 'content', 'created_at', 'updated_at', 'likes_count', 'likes', 'comments', 'shares')
 
-    # def get_likes_count(self, obj):
-    #     return obj.likes.count()
+    def get_likes_count(self, obj):
+        return obj.likes.count()
 
 
 
@@ -201,51 +203,52 @@ class StudentSerializer(serializers.ModelSerializer):
 
 #  selam work
 
-# class TagSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Tag
-#         fields = '__all__'
 
-# class LikeSerializer(serializers.ModelSerializer):
-#     user = serializers.StringRelatedField()
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = '__all__'
 
-#     class Meta:
-#         model = Like
-#         fields = '__all__'
+class LikeSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
 
-# class CommentSerializer(serializers.ModelSerializer):
-#     user = serializers.StringRelatedField()
+    class Meta:
+        model = Like
+        fields = '__all__'
 
-#     class Meta:
-#         model = Comment
-#         fields = '__all__'
+class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
 
-# class PostSerializer(serializers.ModelSerializer):
-#     tags = serializers.SlugRelatedField(slug_field='name', queryset=Tag.objects.all(), many=True)
+    class Meta:
+        model = Comment
+        fields = '__all__'
 
-#     class Meta:
-#         model = Post
-#         fields = ['title', 'description', 'media', 'tags', 'location', 'audience', 'created_at', 'updated_at']
-#     def get_media_url(self, obj):
-#         if obj.media:
-#             return obj.media.url
-#         return None
+class PostSerializer(serializers.ModelSerializer):
+    tags = serializers.SlugRelatedField(slug_field='name', queryset=Tag.objects.all(), many=True)
+
+    class Meta:
+        model = Post
+        fields = ['title', 'description', 'media', 'tags', 'location', 'audience', 'created_at', 'updated_at']
+    def get_media_url(self, obj):
+        if obj.media:
+            return obj.media.url
+        return None
 
 
-# class NotificationSerializer(serializers.ModelSerializer):
-#     user = serializers.StringRelatedField()
-#     post = serializers.PrimaryKeyRelatedField(queryset=Post.objects.all(), required=False)
-#     comment = serializers.PrimaryKeyRelatedField(queryset=Comment.objects.all(), required=False)
-#     like = serializers.PrimaryKeyRelatedField(queryset=Like.objects.all(), required=False)
+class NotificationSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+    post = serializers.PrimaryKeyRelatedField(queryset=Post.objects.all(), required=False)
+    comment = serializers.PrimaryKeyRelatedField(queryset=Comment.objects.all(), required=False)
+    like = serializers.PrimaryKeyRelatedField(queryset=Like.objects.all(), required=False)
 
-#     class Meta:
-#         model = Notification
-#         fields = '__all__'
+    class Meta:
+        model = Notification
+        fields = '__all__'
 
-# class FollowSerializer(serializers.ModelSerializer):
-#     follower = serializers.StringRelatedField()
-#     followed = serializers.StringRelatedField()
+class FollowSerializer(serializers.ModelSerializer):
+    follower = serializers.StringRelatedField()
+    followed = serializers.StringRelatedField()
 
-#     class Meta:
-#         model = Follow
-#         fields = '__all__'
+    class Meta:
+        model = Follow
+        fields = '__all__'

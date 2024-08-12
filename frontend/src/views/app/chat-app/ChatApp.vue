@@ -56,7 +56,6 @@ import UserList from "./particals/leftbar/UserList.vue";
 import MessageWindow from "./particals/rightbar/MessageWindow.vue";
 import {store} from "./store";
 import axios from "../../../axios";
-// import '../../../styles/pages/chat.scss'
 
 export default {
   name: "ChatApp",
@@ -154,7 +153,6 @@ export default {
 }
 </script>
 
-<style lang="scss"  scoped>
-@import '../../../styles/pages/chat'
+<style scoped>
 
 </style>

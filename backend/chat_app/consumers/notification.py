@@ -2,8 +2,6 @@ import json
 
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer, AsyncWebsocketConsumer
-
-
 class NewUserConsumer(WebsocketConsumer):
 
     def connect(self):

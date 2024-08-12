@@ -17,7 +17,6 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-# from chat_app.models import Token
 
 from chat_app.authentication import BearerAuthentication
 from chat_app.serializers import RegistrationSerializer, UsersWithMessageSerializer, UserSerializer

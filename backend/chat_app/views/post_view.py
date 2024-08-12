@@ -1,10 +1,9 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from chat_app.models import   Share
-from newpost.models import Post,Comment
-from newpost.serializers import PostSerializer,CommentSerializer
-from chat_app.serializers import  ShareSerializer
+from chat_app.models import  Share
+from newpost.models import Post, Comment
+from chat_app.serializers import PostSerializer, CommentSerializer, ShareSerializer
 from rest_framework.permissions import IsAuthenticated
 
 class PostViewSet(viewsets.ModelViewSet):
