@@ -274,7 +274,7 @@ const showLess = () => {
 <template>
   <div class="flex">
     <!-- Filter Sidebar -->
-    <div class="shadow-md px-4 h-[78vh] pb-20 flex flex-col gap-6 overflow-y-scroll fixed left-[5vw] bg-white z-10 w-full sm:w-64 lg:w-80">
+    <div class="shadow-md px-4 h-[78vh] pb-20 flex flex-col gap-6 overflow-y-scroll fixed left-[3vw] bg-white z-10 w-full sm:w-64 lg:w-80">
       <!-- Filter -->
       <div class="border-b py-2">
         <h1 class="text-[#008A8A] font-semibold text-lg">Filter</h1>
@@ -374,7 +374,7 @@ const showLess = () => {
     <div class="flex-1 ml-0 sm:ml-64 lg:ml-80 p-4">
       <div
         v-if="products.length > 0"
-        class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 ml-[10vw] mr-[4vw]"
+        class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 ml-[10vw] mr-[3vw]"
       >
         <div
           v-for="(product, index) in products.slice(0, displayedProductsCount)"
