@@ -38,27 +38,33 @@ const router = createRouter({
         {
           path: 'postlist',
           name: 'postlist',
-          component: PostList
+          component: PostList,
+          meta: { sidebar: true }
         },
         {
           path: 'newpost',
           name: 'newpost',
-          component: NewPost
+          component: NewPost,
+          meta: { sidebar: true }
         },
         {
           path: 'marketplace',
           name: 'marketplace',
-          component: ProductList
+          component: ProductList,
+          meta: { sidebar: true }
         },
         {
           path: 'newproduct',
           name: 'newproduct',
-          component: NewProduct
+          component: NewProduct,
+          meta: { sidebar: true }
         },
         {
           path: 'buyproduct',
           name: 'buyproduct',
-          component: BuyProduct
+          component: BuyProduct,
+          meta: { sidebar: true }
+
         }
       ],
       meta: {
