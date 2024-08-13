@@ -1,3 +1,4 @@
+
 <template>
   <div class="flex hover:cursor-pointer fill-gray-300">
     <span v-for="star in maxStars" :key="star" @click="setRating(star)" class="star">
@@ -15,8 +16,11 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue';
+
 const props = defineProps({
-  rating: Number,
+  productId: Number,
+  userId: Number,
   maxStars: {
     type: Number,
     default: 5
@@ -24,9 +28,23 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['rating-changed']);
+const rating = ref(0);
+
+const getStorageKey = () => `rating-${props.userId}-${props.productId}`;
+
+onMounted(() => {
+  // Retrieve rating from local storage on component mount
+  const savedRating = localStorage.getItem(getStorageKey());
+  if (savedRating) {
+    rating.value = parseFloat(savedRating);
+  }
+});
 
 const setRating = (star) => {
-  emit('rating-changed', star);
+  rating.value = star;
+  // Save rating to local storage
+  localStorage.setItem(getStorageKey(), star);
+  emit('rating-changed', { productId: props.productId, userId: props.userId, rating: star });
 };
 </script>
 

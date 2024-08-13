@@ -17,7 +17,7 @@ class Products(models.Model):
     seller_profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='other')
     views = models.PositiveIntegerField(default=0)
-    rating_count = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
     location = models.CharField(max_length=255, blank=True, null=True)  # Add location field
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)

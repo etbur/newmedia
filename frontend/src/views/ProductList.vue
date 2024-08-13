@@ -137,7 +137,7 @@ const updateViewCount = (productId) => {
   updateViewWebSocket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.action === "update_product_view_success") {
-      console.log("Product view updated successfully:", data.num_views);
+      console.log("Product view updated successfully:", data.views);
     } else if (data.action === "update_product_view_error") {
       console.error("Error updating product view:", data.error);
     }
@@ -152,6 +152,7 @@ const updateProductRating = (productId, rating) => {
   const updateRatingWebSocket = new WebSocket(
     `ws://localhost:8000/ws/products/update/${productId}/`
   );
+
   updateRatingWebSocket.onopen = () => {
     updateRatingWebSocket.send(
       JSON.stringify({
@@ -165,10 +166,10 @@ const updateProductRating = (productId, rating) => {
     const data = JSON.parse(event.data);
     if (data.action === "update_product_rating_success") {
       console.log("Product rating updated successfully:", data.rating);
-      // Optionally update the product rating locally
       const product = products.value.find((p) => p.id === productId);
       if (product) {
         product.rating = data.rating;
+       
       }
     } else if (data.action === "update_product_rating_error") {
       console.error("Error updating product rating:", data.error);
@@ -179,6 +180,31 @@ const updateProductRating = (productId, rating) => {
     console.log("Update Rating WebSocket connection closed");
   };
 };
+
+
+const deleteProduct = (productId) => {
+  const deleteProductWebSocket = new WebSocket(
+    `ws://localhost:8000/ws/products/delete/${productId}/`
+  );
+  deleteProductWebSocket.onopen = () => {
+    deleteProductWebSocket.send(JSON.stringify({ action: "delete_product" }));
+  };
+
+  deleteProductWebSocket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.action === "delete_product_success") {
+      console.log("Product deleted successfully:", data.product_id);
+      products.value = products.value.filter((p) => p.id !== data.product_id);
+    } else if (data.action === "delete_product_error") {
+      console.error("Error deleting product:", data.error);
+    }
+  };
+
+  deleteProductWebSocket.onclose = () => {
+    console.log("Delete Product WebSocket connection closed");
+  };
+};
+
 const openModal = (product) => {
   selectedProduct.value = product;
   showModal.value = true;
@@ -188,19 +214,7 @@ const closeModal = () => {
   showModal.value = false;
 };
 
-onMounted(() => {
-  connectProductWebSocket();
-  connectCategoryWebSocket();
-});
 
-onUnmounted(() => {
-  if (productWebSocket) {
-    productWebSocket.close();
-  }
-  if (categoryWebSocket) {
-    categoryWebSocket.close();
-  }
-});
 
 const addProduct = () => {
   router.push("/app/newproduct");
@@ -270,6 +284,20 @@ const showLess = () => {
     displayedProductsCount.value - 6
   );
 };
+
+onMounted(() => {
+  connectProductWebSocket();
+  connectCategoryWebSocket();
+});
+
+onUnmounted(() => {
+  if (productWebSocket) {
+    productWebSocket.close();
+  }
+  if (categoryWebSocket) {
+    categoryWebSocket.close();
+  }
+});
 </script>
 <template>
   <div class="flex flex-col  ">
@@ -580,6 +608,7 @@ const showLess = () => {
             <div class="flex flex-wrap items-start justify-between gap-3">
               <StarRating
                 :rating="product.rating"
+                :product-id="product.id" 
                 @rating-changed="updateProductRating(product.id, $event)"
               />
               <router-link
